@@ -90,7 +90,12 @@ void addObject(AcDbEntity* pEnt, AcDbObjectId &id)
 
 void add()
 {
-
+	AcGePoint3d Ptc;
+	AcDbObjectId objId;
+	acedGetPoint(NULL, L"\ncenter: ", asDblArray(Ptc));
+	customObject* obj = new customObject(Ptc);
+	addObject(obj, objId);
+	obj->close();
 }
 
 extern "C" __declspec(dllexport) AcRx::AppRetCode
