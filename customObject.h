@@ -1,5 +1,15 @@
 #pragma once
 #include <database.h>
+class OWNGripAppData
+{
+private:
+    int ID; //идентификатор для Грипа
+public:
+    OWNGripAppData(int id) :ID(id) {}
+    virtual ~OWNGripAppData() {};
+    int index() const { return ID; }
+    void setIndex(const int id) { ID = id; }
+};
 class customObject : public AcDbEntity
 {
 public:
@@ -7,7 +17,18 @@ public:
     customObject() {};
     customObject(const AcGePoint3d& center) :center(center){};
     virtual ~customObject() {};
+    // Функция перевода из AcGeCircArc3d в_AcDbArc
+    void AcGeCircArc3dToAcDbArc(const AcGeCircArc3d* pGeArc, AcDbArc*& pDbArc) const;
 
+    // Каждый грип рисуется по-своему, поэтому 3 функции для отрисовки разных грипов
+    static void centerPointGrip(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    static void radiusGripPoints(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    static void stretchPoints(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    // Для грипов радиусов
+    static  void  MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
+    // Для грипов ширины
+    static  void  MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
+    // Дополнительные функции
     // Для сохр. данных при загрузке/выгрузке
     virtual Acad::ErrorStatus dwgOutFields(AcDbDwgFiler*) const override;
     virtual Acad::ErrorStatus dwgInFields(AcDbDwgFiler*) override;
@@ -41,8 +62,24 @@ public:
     // Для отображения примититва
     virtual Adesk::Boolean subWorldDraw(AcGiWorldDraw* draw) override;
 
-    virtual Acad::ErrorStatus subGetGripPoints(AcGePoint3dArray& gripPoints, AcDbIntArray& osnapModes, AcDbIntArray& geomIds) const override;
-    virtual Acad::ErrorStatus subMoveGripPointsAt(const AcDbIntArray& indices, const AcGeVector3d& offset) override;
+    // Новая реализация
+
+    // Функция добавления грипа
+    AcDbGripData* addGrip(const AcGePoint3d& PT, const int& gripIdx, const double curViewUnitSize) const;
+
+    // Используется для проверки статусов грип
+    virtual void subGripStatus(const AcDb::GripStat status) override;
+    // Получение грип поинтов
+    virtual Acad::ErrorStatus subGetGripPoints(
+        AcDbGripDataPtrArray& grips, const double curViewUnitSize, const int gripSize,
+        const AcGeVector3d& curViewDir, const int bitflags) const override;
+
+    // Обеспечение движения грип поинтов
+    virtual Acad::ErrorStatus subMoveGripPointsAt(
+        const AcDbVoidPtrArray& gripAppData,
+        const AcGeVector3d& offset,
+        const int bitflags) override;
+
 
     ACRX_DECLARE_MEMBERS(customObject);
     AcGePoint3d  getCenter() const { return center; };
@@ -79,7 +116,7 @@ public:
 
     void  setCenter(const AcGePoint3d& center) { this->center = center; };
     void  setNormal(const AcGeVector3d& normV) { this->normV=normV; };
-    void  setDirection(const AcGeVector3d& directionV) { this->normV = directionV; };
+    void  setDirection(const AcGeVector3d& directionV) { this->directionV = directionV; };
     void setR( double R) { this->R=R; };
     void setr( double r) { this->r=r; };
     void setr1( double r1) {this->r1=r1; };
@@ -99,5 +136,11 @@ protected:
     double r = 8000;
     double r1 = 2000;
     double h = 1000;
+
+    // Вектор указателей  (может изменяться константными методами класса)
+    mutable std::vector<OWNGripAppData*> gripDataPtrArray;
+
+    // Функция очистки вектора указателей OWNGripAppData*
+    void clear_array_ptr(std::vector<OWNGripAppData*>& m_GripDataPtrArray);
 };
 

@@ -6,11 +6,13 @@
 #include <dbents.h>
 #include <dbgroup.h>
 #include "customObject.h"
+#include "jigHeader.h"
 void initApp();
 void unloadApp();
 void test();
 void addObject(AcDbEntity* pEnt, AcDbObjectId &id);
 void add();
+void addJig();
 void initApp()
 {
     acedRegCmds->addCommand(L"TEST_COMMANDS",
@@ -23,6 +25,11 @@ void initApp()
 		L"AddObj",
 		ACRX_CMD_TRANSPARENT,
 		add);
+	acedRegCmds->addCommand(L"TEST_COMMANDS",
+		L"AddJigObject",
+		L"AddJig",
+		ACRX_CMD_TRANSPARENT,
+		addJig);
 	customObject::rxInit();
 	acrxBuildClassHierarchy();
 }
@@ -96,6 +103,17 @@ void add()
 	customObject* obj = new customObject(Ptc);
 	addObject(obj, objId);
 	obj->close();
+}
+
+void addJig()
+{
+	AcGePoint3d Ptc;
+	acedGetPoint(NULL, L"\ncenter: ", asDblArray(Ptc));
+
+	CustomJig* jig = new CustomJig(Ptc);
+
+	jig->startJig();
+	delete jig;
 }
 
 extern "C" __declspec(dllexport) AcRx::AppRetCode

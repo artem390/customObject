@@ -2,6 +2,21 @@
 #include "customObject.h"
 
 ACRX_DXF_DEFINE_MEMBERS(customObject, AcDbEntity, AcDb::kDHL_CURRENT, AcDb::kMReleaseCurrent, 0, CUSTOM, "CustomObject");
+static  AcDbDimData* mpDimData;
+
+// Функция перевода из AcGeCircArc3d в_AcDbArc
+void customObject::AcGeCircArc3dToAcDbArc(const AcGeCircArc3d* pGeArc, AcDbArc*& pDbArc) const
+{
+    AcGePoint3d center = pGeArc->center();
+    AcGeVector3d normal = pGeArc->normal();
+    AcGeVector3d refVec = pGeArc->refVec();
+    AcGePlane plane = AcGePlane(center, normal);
+    double ang = refVec.angleOnPlane(plane);
+    pDbArc = new AcDbArc(center, normal,
+        pGeArc->radius(), pGeArc->startAng() + ang,
+        pGeArc->endAng() + ang);
+    return;
+}
 
 //dwgOutFields
 Acad::ErrorStatus customObject::dwgOutFields(AcDbDwgFiler* fill) const
@@ -56,21 +71,57 @@ Acad::ErrorStatus customObject::subTransformBy(const AcGeMatrix3d& xform)
 Acad::ErrorStatus customObject::subExplode(AcDbVoidPtrArray& entitySet) const
 {
     assertReadEnabled();
+    AcGePoint3d  point17 = getPt17();
+    AcGePoint3d  point20 = getPt20();
+    AcGePoint3d  point16 = AcGePoint3d(point17.y, point17.x, 0);
+    AcGePoint3d  point21 = AcGePoint3d(point20.y, point20.x, 0);
+    AcGePoint3d  point18 = AcGePoint3d(-point17.x, point17.y, 0);
+    AcGePoint3d  point23 = AcGePoint3d(-point20.x, point20.y, 0);
+    AcGePoint3d  point19 = AcGePoint3d(-point17.y, point17.x, 0);
+    AcGePoint3d  point22 = AcGePoint3d(-point20.y, point20.x, 0);
     Acad::ErrorStatus es = Acad::eOk;
-    /*AcGeMatrix3d xMat = get_Matrix(xMat);
+    AcGeMatrix3d xMat = get_Matrix(xMat);
     //Отрезки
     AcDbLine* line1 = new AcDbLine(getPt1().transformBy(xMat), getPt6().transformBy(xMat));
     entitySet.append(line1);
-    AcDbLine* line2 = new AcDbLine(getPt2().transformBy(xMat), getPt5().transformBy(xMat));
+    AcDbLine* line2 = new AcDbLine(getPt1().transformBy(xMat), getPt2().transformBy(xMat));
     entitySet.append(line2);
-    AcDbLine* line3 = new AcDbLine(getPt1().transformBy(xMat), getPt2().transformBy(xMat));
+    AcDbLine* line3 = new AcDbLine(getPt5().transformBy(xMat), getPt6().transformBy(xMat));
     entitySet.append(line3);
-    AcDbLine* line4 = new AcDbLine(getPt2().transformBy(xMat), getPt5().transformBy(xMat));
+    AcDbLine* line4 = new AcDbLine(getPt3().transformBy(xMat), getPt7().transformBy(xMat));
     entitySet.append(line4);
-    AcDbLine* line5 = new AcDbLine(get_PT2().transformBy(xMat), get_PT8().transformBy(xMat));
+    AcDbLine* line5 = new AcDbLine(getPt8().transformBy(xMat), getPt4().transformBy(xMat));
     entitySet.append(line5);
-    AcDbLine* line6 = new AcDbLine(get_PT4().transformBy(xMat), get_PT10().transformBy(xMat));
-    entitySet.append(line6);*/
+    AcDbLine* line6 = new AcDbLine(getPt11().transformBy(xMat), getPt13().transformBy(xMat));
+    entitySet.append(line6);
+    AcDbLine* line7 = new AcDbLine(getPt12().transformBy(xMat), getPt14().transformBy(xMat));
+    entitySet.append(line7);
+    AcDbLine* line8 = new AcDbLine(point17.transformBy(xMat), point20.transformBy(xMat));
+    entitySet.append(line8);
+    AcDbLine* line9 = new AcDbLine(point16.transformBy(xMat), point21.transformBy(xMat));
+    entitySet.append(line9);
+    AcDbLine* line10 = new AcDbLine(point19.transformBy(xMat), point22.transformBy(xMat));
+    entitySet.append(line10);
+    AcDbLine* line11 = new AcDbLine(point18.transformBy(xMat), point23.transformBy(xMat));
+    entitySet.append(line11);
+    //Дуги
+    AcGeCircArc3d* circ_geometry1 = new AcGeCircArc3d(getPt2(), getPt9(), getPt5());
+    circ_geometry1->transformBy(xMat);
+    AcDbArc* circArc1 = new AcDbArc;
+    AcGeCircArc3dToAcDbArc(circ_geometry1, circArc1);
+    entitySet.append(circArc1);
+
+    AcGeCircArc3d* circ_geometry2 = new AcGeCircArc3d(getPt3(), getPt10(), getPt4());
+    circ_geometry2->transformBy(xMat);
+    AcDbArc* circArc2 = new AcDbArc;
+    AcGeCircArc3dToAcDbArc(circ_geometry2, circArc2);
+    entitySet.append(circArc2);
+
+    AcGeCircArc3d* circ_geometry3 = new AcGeCircArc3d(getPt7(), getPt15(), getPt8());
+    circ_geometry3->transformBy(xMat);
+    AcDbArc* circArc3 = new AcDbArc;
+    AcGeCircArc3dToAcDbArc(circ_geometry3, circArc3);
+    entitySet.append(circArc3);
     return es;
 }
 
@@ -92,8 +143,77 @@ Acad::ErrorStatus customObject::subGetOsnapPoints(AcDb::OsnapMode osnapMode, Ade
     const AcGePoint3d& lastPoint, const AcGeMatrix3d& xform, AcGePoint3dArray& snapPoints, AcDbIntArray& geomIds) const
 {
     assertReadEnabled();
-
+ 
+    if (osnapMode != AcDb::kOsModeEnd
+        && osnapMode != AcDb::kOsModeMid
+        && osnapMode != AcDb::kOsModeNear
+        && osnapMode != AcDb::kOsModePerp
+        && osnapMode != AcDb::kOsModeCen
+        && osnapMode != AcDb::kOsModeIns)
+    { 
+        return Acad::eOk;
+    }
     
+    AcGeMatrix3d xMat = get_Matrix(xMat);
+
+    switch (osnapMode)
+    {
+    case AcDb::kOsModeCen:    // Центр объекта
+        snapPoints.append(center);
+        break;
+    case AcDb::kOsModeNear:   // Ближайшие точки (для дуг)
+        if (gsSelectionMark == 12)
+        {
+            AcGeCircArc3d circArc1(getPt2().transformBy(xMat), getPt9().transformBy(xMat), getPt5().transformBy(xMat));
+            snapPoints.append(circArc1.closestPointTo(pickPoint));
+        }
+        break;
+    case AcDb::kOsModeEnd:    // Вершина 
+        if (gsSelectionMark == 10)//Нижняя дуга
+        {
+            snapPoints.append(getPt7().transformBy(xMat));
+            snapPoints.append(getPt15().transformBy(xMat));
+            snapPoints.append(getPt9().transformBy(xMat));
+        }
+        if (gsSelectionMark == 11)//Средняя дуга
+        {
+            snapPoints.append(getPt3().transformBy(xMat));
+            snapPoints.append(getPt10().transformBy(xMat));
+            snapPoints.append(getPt4().transformBy(xMat));
+        }
+        if (gsSelectionMark == 12)//Верхняя дуга
+        {
+            snapPoints.append(getPt2().transformBy(xMat));
+            snapPoints.append(getPt9().transformBy(xMat));
+            snapPoints.append(getPt5().transformBy(xMat));
+        }
+        if (gsSelectionMark == 13)//Нижняя часть основания
+        {
+            snapPoints.append(getPt1().transformBy(xMat));
+            snapPoints.append(getPt6().transformBy(xMat));
+        }
+        if (gsSelectionMark == 14)//Левая верхняя часть основания
+        {
+            snapPoints.append(getPt3().transformBy(xMat));
+            snapPoints.append(getPt7().transformBy(xMat));
+        }
+        if (gsSelectionMark == 15)//Правой верхняя часть основания
+        {
+            snapPoints.append(getPt8().transformBy(xMat));
+            snapPoints.append(getPt4().transformBy(xMat));
+        }
+        if (gsSelectionMark == 16)//Левый бок основания
+        {
+            snapPoints.append(getPt1().transformBy(xMat));
+            snapPoints.append(getPt2().transformBy(xMat));
+        }
+        if (gsSelectionMark == 17)//Правый бок основания
+        {
+            snapPoints.append(getPt5().transformBy(xMat));
+            snapPoints.append(getPt6().transformBy(xMat));
+        }
+        break;
+    }
     return Acad::eOk;
 }
 
@@ -101,8 +221,326 @@ Acad::ErrorStatus customObject::subGetOsnapPoints(AcDb::OsnapMode osnapMode, Ade
 Acad::ErrorStatus customObject::subIntersectWith(const AcDbEntity* ent, AcDb::Intersect intType, AcGePoint3dArray& points, Adesk::GsMarker thisGsMarker, Adesk::GsMarker otherGsMarker) const
 {
     assertReadEnabled();
+    AcGePoint3d  point17 = getPt17();
+    AcGePoint3d  point20 = getPt20();
+    AcGePoint3d  point16 = AcGePoint3d(point17.y, point17.x, 0);
+    AcGePoint3d  point21 = AcGePoint3d(point20.y, point20.x, 0);
+    AcGePoint3d  point18 = AcGePoint3d(-point17.x, point17.y, 0);
+    AcGePoint3d  point23 = AcGePoint3d(-point20.x, point20.y, 0);
+    AcGePoint3d  point19 = AcGePoint3d(-point17.y, point17.x, 0);
+    AcGePoint3d  point22 = AcGePoint3d(-point20.y, point20.x, 0);
     Acad::ErrorStatus es = Acad::eOk;
+    AcGePoint3d intersecPt1, intersecPt2;
+    int count;
+    AcGeMatrix3d xMat = get_Matrix(xMat);
+    if (ent == NULL)
+        return Acad::eNullEntityPointer;
+    AcDbLine* pLine = AcDbLine::cast(ent);
+    if (pLine != nullptr)
+    {
+        AcGePoint3d startPt(pLine->startPoint());
+        AcGePoint3d endPt(pLine->endPoint());
+        AcGeLine3d ent_line(startPt, endPt);
+        
+        if (thisGsMarker == 10)
+        {
+            AcGeCircArc3d circArc(getPt7().transformBy(xMat), getPt15().transformBy(xMat), getPt8().transformBy(xMat));
+            if (circArc.intersectWith(ent_line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+                    
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 11)
+        {
+            AcGeCircArc3d circArc(getPt3().transformBy(xMat), getPt10().transformBy(xMat), getPt4().transformBy(xMat));
+            if (circArc.intersectWith(ent_line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 12)
+        {
+            AcGeCircArc3d circArc(getPt2().transformBy(xMat), getPt9().transformBy(xMat), getPt5().transformBy(xMat));
+            if (circArc.intersectWith(ent_line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 13)
+        {
+            AcGeLine3d line(getPt1().transformBy(xMat), getPt6().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }           
+        }
+        if (thisGsMarker == 14)
+        {
+            AcGeLine3d line(getPt3().transformBy(xMat), getPt7().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 15)
+        {
+            AcGeLine3d line(getPt8().transformBy(xMat), getPt4().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 16)
+        {
+            AcGeLine3d line(getPt1().transformBy(xMat), getPt2().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 17)
+        {
+            AcGeLine3d line(getPt5().transformBy(xMat), getPt6().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 18)
+        {
+            AcGeLine3d line(getPt11().transformBy(xMat), getPt13().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 19)
+        {
+            AcGeLine3d line(getPt12().transformBy(xMat), getPt14().transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 20)
+        {
+            AcGeLine3d line(point17.transformBy(xMat), point20.transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 21)
+        {
+            AcGeLine3d line(point16.transformBy(xMat), point21.transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 22)
+        {
+            AcGeLine3d line(point19.transformBy(xMat), point22.transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+        if (thisGsMarker == 23)
+        {
+            AcGeLine3d line(point18.transformBy(xMat), point23.transformBy(xMat));
+            if (line.intersectWith(ent_line, intersecPt1))
+            {
+                points.append(intersecPt1);
+            }
+        }
+    }
     
+    AcDbCircle* circle = AcDbCircle::cast(ent);
+    if (circle != nullptr)
+    {
+        AcGeCircArc3d circArcEnt(circle->center(), circle->normal(), circle->radius());
+        if (thisGsMarker == 10)
+        {
+            AcGeCircArc3d circArc(getPt7().transformBy(xMat), getPt15().transformBy(xMat), getPt8().transformBy(xMat));
+            if (circArcEnt.intersectWith(circArc, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 11)
+        {
+            AcGeCircArc3d circArc(getPt3().transformBy(xMat), getPt10().transformBy(xMat), getPt4().transformBy(xMat));
+            if (circArcEnt.intersectWith(circArc, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 12)
+        {
+            AcGeCircArc3d circArc(getPt2().transformBy(xMat), getPt9().transformBy(xMat), getPt5().transformBy(xMat));
+            if (circArcEnt.intersectWith(circArc, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 13)
+        {
+            AcGeLine3d line(getPt1().transformBy(xMat), getPt6().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 14)
+        {
+            AcGeLine3d line(getPt3().transformBy(xMat), getPt7().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 15)
+        {
+            AcGeLine3d line(getPt8().transformBy(xMat), getPt4().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 16)
+        {
+            AcGeLine3d line(getPt1().transformBy(xMat), getPt2().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 17)
+        {
+            AcGeLine3d line(getPt5().transformBy(xMat), getPt6().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 18)
+        {
+            AcGeLine3d line(getPt11().transformBy(xMat), getPt13().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 19)
+        {
+            AcGeLine3d line(getPt12().transformBy(xMat), getPt14().transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 20)
+        {
+            AcGeLine3d line(point17.transformBy(xMat), point20.transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 21)
+        {
+            AcGeLine3d line(point16.transformBy(xMat), point21.transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 22)
+        {
+            AcGeLine3d line(point19.transformBy(xMat), point22.transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+        if (thisGsMarker == 23)
+        {
+            AcGeLine3d line(point18.transformBy(xMat), point23.transformBy(xMat));
+            if (circArcEnt.intersectWith(line, count, intersecPt1, intersecPt2))
+            {
+                points.append(intersecPt1);
+                if (count > 1) {
+
+                    points.append(intersecPt2);
+                }
+            }
+        }
+    }
     return es;
 }
 
@@ -205,50 +643,49 @@ Adesk::Boolean customObject::subWorldDraw(AcGiWorldDraw* draw)
 }
 
 // Грипы (Более старые функции)
-Acad::ErrorStatus customObject::subGetGripPoints(AcGePoint3dArray& gripPoints, AcDbIntArray& osnapModes, AcDbIntArray& geomIds) const
+Acad::ErrorStatus customObject::subGetGripPoints(
+    AcDbGripDataPtrArray& grips, const double curViewUnitSize, const int gripSize,
+    const AcGeVector3d& curViewDir, const int bitflags) const
 {
     assertReadEnabled();
     Acad::ErrorStatus es = Acad::eOk;
     AcGeMatrix3d xMat= get_Matrix(xMat);
-    
+    AcGeVector3d vector = getPt14() - getPt12();
+    double yPoint = (sqrt(pow(vector.x, 2) + pow(vector.y, 2)) / 2) + (sqrt(pow(r1, 2) - pow(h / 2, 2)));
     // Изменение внешнего радиуса 
-    gripPoints.append(getPt9().transformBy(xMat));  //1
+    grips.append(addGrip(getPt9().transformBy(xMat),1, curViewUnitSize));  //1
     // Изменение среднего радиуса 
-    gripPoints.append(getPt10().transformBy(xMat));  //2
+    grips.append(addGrip(getPt10().transformBy(xMat), 2, curViewUnitSize));  //2
     // Изменение младшего радиуса 
-    gripPoints.append(getPt15().transformBy(xMat));   //3
+    grips.append(addGrip(getPt15().transformBy(xMat), 3, curViewUnitSize));   //3
     // Изменение перемещение
-    gripPoints.append(getCenter());   //4
-
-    
-    /*gripPoints.append(get_PT11().transformBy(xMat));  //6
-    // Изменение длины заклепки
-    gripPoints.append(get_PT3().transformBy(xMat));   //7
-    gripPoints.append(get_PT9().transformBy(xMat));   //8
-    // Точка для поворота (немного правее объекта)
-    AcGePoint3d rotate_point(get_PT6().x + 50, get_PT6().y, get_PT6().z);
-    gripPoints.append(rotate_point.transformBy(xMat)); //9*/
+    grips.append(addGrip(getCenter(), 4, curViewUnitSize));   //4
+    // Изменение ширины столбцов
+    grips.append(addGrip(AcGePoint3d(h / 2, yPoint, 0).transformBy(xMat), 5, curViewUnitSize));   //5
+    grips.append(addGrip(AcGePoint3d(-h / 2, yPoint, 0).transformBy(xMat), 6, curViewUnitSize)); //6
     return es;
 }
 
-Acad::ErrorStatus customObject::subMoveGripPointsAt(const AcDbIntArray& indices, const AcGeVector3d& offset)
+Acad::ErrorStatus customObject::subMoveGripPointsAt(
+    const AcDbVoidPtrArray& gripAppData,
+    const AcGeVector3d& offset,
+    const int bitflags)
 {
     assertWriteEnabled();
-    Acad::ErrorStatus es = Acad::eOk;
-
-
+    if (offset.isZeroLength())
+        return Acad::eInvalidInput;
 
 
  // Накладываемые ограничения
  // Мин. разница R и r
-    double RminusrMin = 2000;
+    double RminusrMin = R-r;
  // Мин. разница r и r1  
-    double rminusr1Min = 6000;
+    double rminusr1Min = r-r1;
  // Мин. r1  
     double r1Min = 1500;
+ // Мин. h 
+    double hMin = h;
     
-
-
     // Вектор ОX для объекта
     AcGeVector3d vector_OX(directionV);
     double len_OX = vector_OX.dotProduct(offset);
@@ -257,13 +694,14 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(const AcDbIntArray& indices,
     double len_OY = vector_OY.dotProduct(offset);
 
 
-    for (int i = 0; i < indices.length(); i++)
+    for (int i = 0; i < gripAppData.length(); i++)
     {
-
-        switch (indices[i])
+        OWNGripAppData* pAppData = (OWNGripAppData*)gripAppData[i];
+        int iIndex = pAppData->index();
+        switch (iIndex)
         {
             
-        case 0:
+        case 1:
             if ((r + len_OY - r1) < rminusr1Min)
             {
                 r = r1 + rminusr1Min;
@@ -273,10 +711,10 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(const AcDbIntArray& indices,
             {
                 R += len_OY;
                 r += len_OY;
-            }        
+            }
             return Acad::eOk;
 
-        case 1:
+        case 2:
             if (r + len_OY >= (R- RminusrMin))
             {
                 r = R - RminusrMin;
@@ -291,7 +729,7 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(const AcDbIntArray& indices,
                 r += len_OY;
             }
             return Acad::eOk;
-        case 2:
+        case 3:
             if (r1 + len_OY >= r- rminusr1Min)
             {
                 r1 = r - rminusr1Min;
@@ -306,12 +744,28 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(const AcDbIntArray& indices,
                 r1 += len_OY;
             }
             return Acad::eOk;
-        case 3:
+        case 4:
             center += offset;
+            return Acad::eOk;
+        case 5:
+        case 6:
+            if ((h + (len_OX * 2)) > r * 0.125)
+            {
+                h = r * 0.125;
+            }
+            else
+            if ((h + (len_OX * 2)) < hMin)
+            {
+                h = hMin;
+            }
+            else
+            {
+                h += (len_OX * 2);
+            }
             return Acad::eOk;
         }
     }
-    return es;
+    return Acad::eOk;
 }
 
 
@@ -350,3 +804,207 @@ AcGePoint3d  customObject::getPt20() const {
     }
     return AcGePoint3d::kOrigin;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Грип для центральной точки =========
+// Функция корректного открытия и получения указателя на объект кастом класса
+inline customObject* openAndGetPtr(AcDbGripData* pGripData, const AcDbObjectId& entId)
+{
+    if (pGripData == NULL)
+        return nullptr;
+
+    AcDbEntity* pEnt = NULL;
+    if (acdbOpenAcDbEntity(pEnt, entId, AcDb::kForRead) != Acad::eOk)
+        return nullptr;
+    customObject* customObject = customObject::cast(pEnt);
+    pEnt->close();
+    return customObject;
+}
+
+void customObject::centerPointGrip(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize)
+{
+    if (pThis == NULL)
+        return;
+
+    // Получаем в точку наш гриппоинт
+    AcGePoint3d gripPt = pThis->gripPoint();
+    AcGeVector3d Normal{ 0,0,1 };
+    pVd->subEntityTraits().setFillType(kAcGiFillAlways);
+    pVd->geometry().circle(gripPt, 150, Normal);
+
+    return;
+}
+
+// Грип для радиусов
+void customObject::radiusGripPoints(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize)
+{
+    customObject* customObject = openAndGetPtr(pThis, entId);
+
+    if (customObject == nullptr)
+        return;
+
+    // Получаем в точку наш гриппоинт
+    AcGePoint3d pntGrip = pThis->gripPoint();
+    AcGeVector3d  vecXDir = customObject->getDirection();
+    AcGeVector3d  vecNormal = customObject->getNormal();
+
+    AcGeMatrix3d xMat;
+    xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
+    pVd->geometry().pushModelTransform(xMat);
+
+    AcGePoint3d* pts = new AcGePoint3d[3];
+    pts[0] = { 150,-100,0 };
+    pts[1] = { 0,200,0 };
+    pts[2] = { -150,-100,0 };
+
+    pVd->subEntityTraits().setFillType(kAcGiFillAlways);
+    pVd->geometry().polygon(3, pts);
+    delete[] pts;
+    pVd->geometry().popModelTransform();
+    customObject->close();
+
+    return;
+};
+
+// Грип для изменения ширины столбца
+void customObject::stretchPoints(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize)
+{
+    customObject* customObject = openAndGetPtr(pThis, entId);
+
+    if (customObject == nullptr)
+        return;
+
+    // Получаем в точку наш гриппоинт
+    AcGePoint3d pntGrip = pThis->gripPoint();
+    AcGeVector3d  vecXDir = customObject->getDirection();
+    AcGeVector3d  vecNormal = customObject->getNormal();
+
+    AcGeMatrix3d xMat;
+    xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
+    pVd->geometry().pushModelTransform(xMat);
+
+    AcGePoint3d* pts = new AcGePoint3d[4];
+    pts[0] = { 150,150,0 };
+    pts[1] = { 150,-150,0 };
+    pts[2] = { -150,-150,0 };
+    pts[3] = { -150,150,0 };
+
+    pVd->subEntityTraits().setFillType(kAcGiFillAlways);
+    pVd->geometry().polygon(4, pts);
+    delete[] pts;
+    pVd->geometry().popModelTransform();
+    customObject->close();
+
+    return;
+};
+
+
+void  customObject::MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
+{
+    Acad::ErrorStatus es = Acad::eOk;
+    customObject* customObject = openAndGetPtr(pGripData, entId);
+
+    if (customObject == nullptr)
+        return;
+    // Получаем данные
+    AcGeMatrix3d xMat = customObject->get_Matrix(xMat);
+
+    //Данный класс измеряет расстояние между двумя точками, расположенными в любом месте пространства
+    AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
+
+    // Класс поддерживает динамические измерения для объектов, производных от AcDbEntity.
+    AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
+    es = pDimData->setOwnerId(entId);
+    es = pDimData->setDimFocal(true);
+    es = pDimData->setDimEditable(true);
+    es = pDimData->setDimRadius(true);
+    es = pDimData->setDimHideIfValueIsZero(true);
+
+    dimDataArr.append(pDimData);
+    mpDimData = pDimData;
+    pAlignedDim->close();
+    customObject->close();
+}
+
+void  customObject::MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
+{
+    Acad::ErrorStatus es = Acad::eOk;
+    customObject* customObject = openAndGetPtr(pGripData, entId);
+
+    if (customObject == nullptr)
+        return;
+    // Получаем данные
+    AcGeMatrix3d xMat = customObject->get_Matrix(xMat);
+
+    AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
+    // Класс поддерживает динамические измерения для объектов, производных от AcDbEntity.
+    AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
+    es = pDimData->setOwnerId(entId);
+    es = pDimData->setDimFocal(true);
+    es = pDimData->setDimEditable(true);
+    es = pDimData->setDimRadius(true);
+    es = pDimData->setDimHideIfValueIsZero(true);
+    //es = pDimData->setDimValueFunc(setDimValueForDiametrRivet);
+
+    dimDataArr.append(pDimData);
+    mpDimData = pDimData;
+    pAlignedDim->close();
+    customObject->close();
+}
+
+// Функция добавления грипа ========
+AcDbGripData* customObject::addGrip(const AcGePoint3d& PT, const int& gripIdx, const double curViewUnitSize) const
+{
+    AcDbGripData* pGripData = new AcDbGripData();
+    pGripData->setGripPoint(PT);
+    OWNGripAppData* pAppData = new OWNGripAppData(gripIdx);
+    gripDataPtrArray.push_back(pAppData);  //Добавляем собственную грип дату в массив для дальнейшего удаления
+    pGripData->setAppData(pAppData);
+
+    switch (gripIdx)
+    {        
+    case 1:
+    case 2:
+    case 3:
+        pGripData->setViewportDraw(radiusGripPoints);
+        pGripData->setHotGripDimensionFunc(MyGripHotGripRadiuspoints);
+        break;
+    case 4:
+        pGripData->setViewportDraw(centerPointGrip);
+        break;
+    case 5:
+    case 6:
+        pGripData->setViewportDraw(stretchPoints);
+        pGripData->setHotGripDimensionFunc(MyGripHotGripStretchpoints);
+        break;
+    }
+
+    return pGripData;
+};
+void customObject::clear_array_ptr(std::vector<OWNGripAppData*>& gripDataPtrArray)
+{
+    for (auto p : gripDataPtrArray)
+    {
+        delete p;
+    }
+    gripDataPtrArray.clear();
+    return;
+};
+// Используется для проверки статусов грип  
+void customObject::subGripStatus(const AcDb::GripStat status)
+{
+    switch (status)
+    {
+    case AcDb::kGripsDone:
+        clear_array_ptr(gripDataPtrArray);
+        break;
+
+    case AcDb::kGripsToBeDeleted:
+        clear_array_ptr(gripDataPtrArray);
+        break;
+
+    case AcDb::kDimDataToBeDeleted:
+        break;
+    }
+}
+
