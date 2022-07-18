@@ -92,7 +92,6 @@ public:
 
     AcGeMatrix3d get_Matrix(AcGeMatrix3d& xMat) const
     {
-        //Задаем коорд. сист матрице ЛСК через центральную точку и 3 вектора (х,y,z)
         return xMat.setCoordSystem(center, directionV, (-1) * directionV.crossProduct(normV), normV);
     }
 
@@ -113,6 +112,11 @@ public:
     AcGePoint3d  getPt15() const { return{ 0, r1, 0 }; };
     AcGePoint3d  getPt17() const ;
     AcGePoint3d  getPt20() const;
+    double getRminusrMin() const { return 2000; };
+    double getrminusr1Min() const { return 5000; };
+    double getr1Min() const { return 1500; };
+    double getHMin() const { return 500; };
+    double getHmax() const { return 2 * r1 * sin(PI/8); };
 
     void  setCenter(const AcGePoint3d& center) { this->center = center; };
     void  setNormal(const AcGeVector3d& normV) { this->normV=normV; };

@@ -21,7 +21,7 @@ private:
 AcEdJig::DragStatus CustomJig::sampler()
 {
     DragStatus stat = AcEdJig::kNormal;
-    static AcGePoint3d tempPt;
+    AcGePoint3d tempPt;
     stat = acquirePoint(Pt, center);
     if (tempPt != Pt)
     {
@@ -48,15 +48,15 @@ Adesk::Boolean CustomJig::update()
         AcGeVector3d vector_OY(obj->getDirection().perpVector());
         AcGeVector3d offset{ center.x - Pt.x,center.y - Pt.y,center.z - Pt.z };
         double R = abs(vector_OY.dotProduct(offset) * 2);
-        if ((R - obj->getr1()) < 8000)
+        if (R - obj->getRminusrMin() < obj->getrminusr1Min())
         {
-            obj->setr(obj->getr1() + 6000);
-            obj->setR(obj->getr() + 2000);
+            obj->setr(obj->getr());
+            obj->setR(obj->getR());
         } 
         else
         {
+            obj->setr(R- obj->getRminusrMin());
             obj->setR(R);
-            obj->setr(R - 2000);
         }
         
     }
@@ -69,11 +69,26 @@ void CustomJig::startJig()
     obj = new customObject(center);
     setDispPrompt(_T("\nEnter object direction "));
     AcEdJig::DragStatus stat = drag();
-
-    count++;   
-    setDispPrompt(_T("\nEnter object radius: "));
-    stat = drag();
-    append();
+    if (stat == AcEdJig::kNormal)
+    {
+        count++;
+        setDispPrompt(_T("\nEnter object radius: "));
+        stat = drag();
+        if (stat == AcEdJig::kNormal)
+        {
+            append();
+        }
+        else
+        {
+            delete obj;
+        }
+        
+    }
+    else
+    {
+        delete obj;
+    }
+    
 }
 
 CustomJig::CustomJig(const AcGePoint3d& pt) : center(pt)

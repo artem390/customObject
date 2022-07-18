@@ -642,7 +642,7 @@ Adesk::Boolean customObject::subWorldDraw(AcGiWorldDraw* draw)
     return Adesk::kTrue;
 }
 
-// Грипы (Более старые функции)
+// Грипы 
 Acad::ErrorStatus customObject::subGetGripPoints(
     AcDbGripDataPtrArray& grips, const double curViewUnitSize, const int gripSize,
     const AcGeVector3d& curViewDir, const int bitflags) const
@@ -674,17 +674,6 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
     assertWriteEnabled();
     if (offset.isZeroLength())
         return Acad::eInvalidInput;
-
-
- // Накладываемые ограничения
- // Мин. разница R и r
-    double RminusrMin = R-r;
- // Мин. разница r и r1  
-    double rminusr1Min = r-r1;
- // Мин. r1  
-    double r1Min = 1500;
- // Мин. h 
-    double hMin = h;
     
     // Вектор ОX для объекта
     AcGeVector3d vector_OX(directionV);
@@ -702,10 +691,10 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
         {
             
         case 1:
-            if ((r + len_OY - r1) < rminusr1Min)
+            if ((r + len_OY - r1) < getrminusr1Min())
             {
-                r = r1 + rminusr1Min;
-                R = r + RminusrMin;
+                r = r1 + getrminusr1Min();
+                R = r + getRminusrMin();
             }
             else
             {
@@ -715,14 +704,14 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
             return Acad::eOk;
 
         case 2:
-            if (r + len_OY >= (R- RminusrMin))
+            if (r + len_OY >= (R- getRminusrMin()))
             {
-                r = R - RminusrMin;
+                r = R - getRminusrMin();
             }
             else
-            if((r+ len_OY) < r1+rminusr1Min)
+            if((r+ len_OY) < r1+ getrminusr1Min())
             {
-                r= r1+ rminusr1Min;
+                r= r1+ getrminusr1Min();
             }
             else
             {
@@ -730,14 +719,19 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
             }
             return Acad::eOk;
         case 3:
-            if (r1 + len_OY >= r- rminusr1Min)
+            if (r1 + len_OY >= r- getrminusr1Min())
             {
-                r1 = r - rminusr1Min;
+                r1 = r - getrminusr1Min();
             }
             else
-            if ((r1 + len_OY) < r1Min)
+            if (h > 2 * (r1 + len_OY) * sin(PI / 8))
             {
-                r1 = r1Min;
+                r1 = h / (2 * sin(PI / 8));
+            }
+            else
+            if ((r1 + len_OY) < getr1Min())
+            {
+                r1 = getr1Min();
             }
             else
             {
@@ -749,14 +743,18 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
             return Acad::eOk;
         case 5:
         case 6:
-            if ((h + (len_OX * 2)) > r * 0.125)
+            if (iIndex == 6)
             {
-                h = r * 0.125;
+                len_OX = len_OX * (-1);
+            }   
+            if (h + (2*len_OX)  > getHmax())
+            {
+                h = getHmax();
             }
             else
-            if ((h + (len_OX * 2)) < hMin)
+            if ((h + (len_OX * 2)) < getHMin())
             {
-                h = hMin;
+                h = getHMin();
             }
             else
             {
