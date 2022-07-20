@@ -107,11 +107,7 @@ void add()
 
 void addJig()
 {
-	AcGePoint3d Ptc;
-	acedGetPoint(NULL, L"\ncenter: ", asDblArray(Ptc));
-
-	CustomJig* jig = new CustomJig(Ptc);
-
+	CustomJig* jig = new CustomJig();
 	jig->startJig();
 	delete jig;
 }

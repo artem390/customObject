@@ -4,31 +4,35 @@ class OWNGripAppData
 {
 private:
     int ID; //идентификатор для Грипа
+    int gripSize;
 public:
-    OWNGripAppData(int id) :ID(id) {}
+    OWNGripAppData(int id) :ID(id){}
     virtual ~OWNGripAppData() {};
     int index() const { return ID; }
     void setIndex(const int id) { ID = id; }
+    void setGripSize(const int size) { gripSize = size; }
+    int getGripSize() const { return gripSize; }
 };
 class customObject : public AcDbEntity
 {
 public:
-
     customObject() {};
     customObject(const AcGePoint3d& center) :center(center){};
     virtual ~customObject() {};
     // Функция перевода из AcGeCircArc3d в_AcDbArc
-    void AcGeCircArc3dToAcDbArc(const AcGeCircArc3d* pGeArc, AcDbArc*& pDbArc) const;
+    void AcGeCircArc3dToAcDbArc(const AcGeCircArc3d& pGeArc, AcDbArc* pDbArc) const;
 
-    // Каждый грип рисуется по-своему, поэтому 3 функции для отрисовки разных грипов
-    static void centerPointGrip(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
-    static void radiusGripPoints(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
-    static void stretchPoints(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    // Функции рисования грипов
+    static void centerGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    static void radiusGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    static void stretchGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
     // Для грипов радиусов
     static  void  MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
+    static  AcGeVector3d setDimValueForRadius(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для грипов ширины
     static  void  MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
-    // Дополнительные функции
+    // Для обновления динамического размера
+    static  bool  updateDimensions(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
     // Для сохр. данных при загрузке/выгрузке
     virtual Acad::ErrorStatus dwgOutFields(AcDbDwgFiler*) const override;
     virtual Acad::ErrorStatus dwgInFields(AcDbDwgFiler*) override;
@@ -56,13 +60,11 @@ public:
             const AcDbEntity* ent,
             AcDb::Intersect intType,
             AcGePoint3dArray& points,
-            Adesk::GsMarker /*thisGsMarker*/,
+            Adesk::GsMarker thisGsMarker,
             Adesk::GsMarker otherGsMarker) const;
 
     // Для отображения примититва
     virtual Adesk::Boolean subWorldDraw(AcGiWorldDraw* draw) override;
-
-    // Новая реализация
 
     // Функция добавления грипа
     AcDbGripData* addGrip(const AcGePoint3d& PT, const int& gripIdx, const double curViewUnitSize) const;
@@ -90,9 +92,9 @@ public:
     double getr1()const { return r1; };
     double getH() const { return h; };
 
-    AcGeMatrix3d get_Matrix(AcGeMatrix3d& xMat) const
+    void get_Matrix(AcGeMatrix3d& xMat) const
     {
-        return xMat.setCoordSystem(center, directionV, (-1) * directionV.crossProduct(normV), normV);
+        xMat.setCoordSystem(center, directionV, (-1) * directionV.crossProduct(normV), normV);
     }
 
     AcGePoint3d  getPt1() const { return{ -R, -(R-r), 0 }; };
@@ -112,10 +114,11 @@ public:
     AcGePoint3d  getPt15() const { return{ 0, r1, 0 }; };
     AcGePoint3d  getPt17() const ;
     AcGePoint3d  getPt20() const;
-    double getRminusrMin() const { return 2000; };
-    double getrminusr1Min() const { return 5000; };
-    double getr1Min() const { return 1500; };
-    double getHMin() const { return 500; };
+    double getCoeff() const { return 500; };
+    double getminFrameThickness() const { return getCoeff()*4; };
+    double getminWindowThickness() const { return getCoeff()*10; };
+    double getr1Min() const { return getCoeff()*3; };
+    double getHMin() const { return getCoeff(); };
     double getHmax() const { return 2 * r1 * sin(PI/8); };
 
     void  setCenter(const AcGePoint3d& center) { this->center = center; };
@@ -147,4 +150,5 @@ protected:
     // Функция очистки вектора указателей OWNGripAppData*
     void clear_array_ptr(std::vector<OWNGripAppData*>& m_GripDataPtrArray);
 };
+
 

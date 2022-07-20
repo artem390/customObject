@@ -18,10 +18,13 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="jigHeader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="customObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="jigHeader.h">
+    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,5 +38,13 @@
     <ClCompile Include="customObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="jig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="HelloNRX.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

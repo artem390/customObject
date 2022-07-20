@@ -32,7 +32,6 @@
 #undef _DEBUG
 #pragma message ("     Compiling header files in release mode.")
 #endif
-
 #pragma pack (push, 8)
 #pragma warning(disable: 4786 4996)
 

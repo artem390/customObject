@@ -16,4 +16,7 @@
     <LocalDebuggerCommand>D:\NanosoftRelese\nCad.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup>
+    <RESOURCE_FILE>HelloNRX.rc</RESOURCE_FILE>
+  </PropertyGroup>
 </Project>
