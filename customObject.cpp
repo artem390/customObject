@@ -740,11 +740,6 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
                 r1 = h / (2 * sin(PI / 8));
             }
             else
-            if ((r1 + len_OY) < getr1Min())
-            {
-                r1 = getr1Min();
-            }
-            else
             {
                 r1 += len_OY;
             }
@@ -855,6 +850,7 @@ bool  customObject::updateDimensions(customObject* obj, const AcGePoint3d& xline
 // Грип для центральной точки 
 void customObject::centerGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize)
 {
+    testf();
     if (pThis == NULL)
         return;
     OWNGripAppData* pAppData = (OWNGripAppData*)(pThis->appData());
@@ -980,7 +976,6 @@ void  customObject::MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  Ac
     es = pDimData->setDimRadius(true);
     es = pDimData->setDimHideIfValueIsZero(true);
     es = pDimData->setDimValueFunc(setDimValueForRadius);
-    
     dimDataArr.append(pDimData);
     mpDimData = pDimData;
     pAlignedDim->close();
@@ -1068,4 +1063,11 @@ void customObject::subGripStatus(const AcDb::GripStat status)
     }
 }
 
+void customObject::testf()
+{
+    AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
+    AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
+    pDimData->setDimValueFunc(setDimValueForRadius);
+    int l = 10;
+}
 

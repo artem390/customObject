@@ -5,9 +5,12 @@ class OWNGripAppData
 private:
     int ID; //идентификатор для Грипа
     int gripSize;
+    AcDbDimDataPtrArray d;
 public:
     OWNGripAppData(int id) :ID(id){}
     virtual ~OWNGripAppData() {};
+    AcDbDimDataPtrArray getDimArray() const { return d; };
+    void setDimArray(const AcDbDimDataPtrArray dim) { this->d = dim; };
     int index() const { return ID; }
     void setIndex(const int id) { ID = id; }
     void setGripSize(const int size) { gripSize = size; }
@@ -19,6 +22,7 @@ public:
     customObject() {};
     customObject(const AcGePoint3d& center) :center(center){};
     virtual ~customObject() {};
+    static void testf();
     // Функция перевода из AcGeCircArc3d в_AcDbArc
     void AcGeCircArc3dToAcDbArc(const AcGeCircArc3d& pGeArc, AcDbArc* pDbArc) const;
 
@@ -28,7 +32,7 @@ public:
     static void stretchGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
     // Для грипов радиусов
     static  void  MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
-    static  AcGeVector3d setDimValueForRadius(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
+    static AcGeVector3d setDimValueForRadius(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для грипов ширины
     static  void  MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
     // Для обновления динамического размера
@@ -117,7 +121,6 @@ public:
     double getCoeff() const { return 500; };
     double getminFrameThickness() const { return getCoeff()*4; };
     double getminWindowThickness() const { return getCoeff()*10; };
-    double getr1Min() const { return getCoeff()*3; };
     double getHMin() const { return getCoeff(); };
     double getHmax() const { return 2 * r1 * sin(PI/8); };
 
