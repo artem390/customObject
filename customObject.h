@@ -22,7 +22,6 @@ public:
     customObject() {};
     customObject(const AcGePoint3d& center) :center(center){};
     virtual ~customObject() {};
-    static void testf();
     // Функция перевода из AcGeCircArc3d в_AcDbArc
     void AcGeCircArc3dToAcDbArc(const AcGeCircArc3d& pGeArc, AcDbArc* pDbArc) const;
 
@@ -35,6 +34,7 @@ public:
     static AcGeVector3d setDimValueForRadius(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для грипов ширины
     static  void  MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
+    static AcGeVector3d setDimValueForH(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для обновления динамического размера
     static  bool  updateDimensions(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
     // Для сохр. данных при загрузке/выгрузке
