@@ -22,7 +22,6 @@ public:
     customObject() {};
     customObject(const AcGePoint3d& center) :center(center){};
     virtual ~customObject() {};
-    static void testf();
     // Функция перевода из AcGeCircArc3d в_AcDbArc
     void AcGeCircArc3dToAcDbArc(const AcGeCircArc3d& pGeArc, AcDbArc* pDbArc) const;
 
@@ -30,13 +29,16 @@ public:
     static void centerGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
     static void radiusGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
     static void stretchGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
+    static void rotateGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pVd, const AcDbObjectId& entId, AcDbGripOperations::DrawType type, AcGePoint3d* cursor, int gripSize);
     // Для грипов радиусов
     static  void  MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
     static AcGeVector3d setDimValueForRadius(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для грипов ширины
     static  void  MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr);
+    static AcGeVector3d setDimValueForH(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для обновления динамического размера
     static  bool  updateDimensions(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
+    static  bool  updateDimensions1(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
     // Для сохр. данных при загрузке/выгрузке
     virtual Acad::ErrorStatus dwgOutFields(AcDbDwgFiler*) const override;
     virtual Acad::ErrorStatus dwgInFields(AcDbDwgFiler*) override;
@@ -118,7 +120,7 @@ public:
     AcGePoint3d  getPt15() const { return{ 0, r1, 0 }; };
     AcGePoint3d  getPt17() const ;
     AcGePoint3d  getPt20() const;
-    double getCoeff() const { return 500; };
+    double getCoeff() const { return 5; };
     double getminFrameThickness() const { return getCoeff()*4; };
     double getminWindowThickness() const { return getCoeff()*10; };
     double getHMin() const { return getCoeff(); };
@@ -142,10 +144,10 @@ protected:
     AcGeVector3d directionV{ 1,0,0 };
 
     
-    double R = 10000;
-    double r = 8000;
-    double r1 = 2000;
-    double h = 1000;
+    double R = 100;
+    double r = 80;
+    double r1 = 20;
+    double h = 10;
 
     // Вектор указателей  (может изменяться константными методами класса)
     mutable std::vector<OWNGripAppData*> gripDataPtrArray;

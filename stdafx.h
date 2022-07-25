@@ -42,11 +42,16 @@
 #include <SDKDDKVer.h>
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-
+#ifdef _WINDOWS_
+#undef _WINDOWS_
+#endif _WINDOWS_
 // Windows Header Files:
-#include <windows.h>
-#include <unknwn.h>
+//#include <windows.h>
+//#include <unknwn.h>
 
+//#include <afx.h>
+#include <afxwin.h>
+#include <afxext.h>
 #include "arxHeaders.h"
 
 #pragma pack (pop)
