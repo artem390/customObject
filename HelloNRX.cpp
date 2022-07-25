@@ -7,6 +7,7 @@
 #include <dbgroup.h>
 #include "customObject.h"
 #include "jigHeader.h"
+#include "dialog.h"
 void initApp();
 void unloadApp();
 void test();
@@ -30,6 +31,11 @@ void initApp()
 		L"AddJig",
 		ACRX_CMD_TRANSPARENT,
 		addJig);
+	acedRegCmds->addCommand(L"TEST_COMMANDS",
+		L"OpenObjectWindow",
+		L"OpenWindow",
+		ACRX_CMD_TRANSPARENT,
+		openWindow);
 	customObject::rxInit();
 	acrxBuildClassHierarchy();
 }

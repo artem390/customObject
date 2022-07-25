@@ -200,7 +200,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WIN64;WIN32;_DEBUG;_WINDOWS;_USRDLL;HELLONRX_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;WIN32;_DEBUG;_WINDOWS;HELLONRX_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <ShowIncludes>true</ShowIncludes>
     </ClCompile>
@@ -311,12 +311,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="customObject.h" />
+    <ClInclude Include="dialog.h" />
     <ClInclude Include="jigHeader.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="customObject.cpp" />
+    <ClCompile Include="dialog.cpp" />
     <ClCompile Include="HelloNRX.cpp" />
     <ClCompile Include="jig.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -329,6 +331,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release ACAD|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release ACAD|x64'">Create</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="HelloNRX.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
