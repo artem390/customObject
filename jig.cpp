@@ -3,6 +3,11 @@
 
 AcEdJig::DragStatus CustomJig::sampler()
 {
+    setUserInputControls((UserInputControls)
+        (AcEdJig::kAccept3dCoordinates
+            | AcEdJig::kNoNegativeResponseAccepted
+            | AcEdJig::kNoZeroResponseAccepted
+            | AcEdJig::kAcceptOtherInputString));
     DragStatus stat = AcEdJig::kNormal;
     AcGePoint3d tempPt;
     stat = acquirePoint(Pt, center);
@@ -46,7 +51,7 @@ Adesk::Boolean CustomJig::update()
         }
 
     }
-
+    updateDimensions();
     return Adesk::kTrue;
 }
 
@@ -55,17 +60,23 @@ void CustomJig::startJig()
     obj = new customObject();
     setDispPrompt(_T("\nEnter object center "));
     AcEdJig::DragStatus stat = drag();
-    count++;
-    center = obj->getCenter();
-    setDispPrompt(_T("\nEnter object direction "));
-    stat = drag();
-    count++;
-    setDispPrompt(_T("\nEnter object radius: "));
-    stat = drag();
     if (stat == AcEdJig::kNormal)
     {
-        append();
-    }
+        count++;
+        center = obj->getCenter();
+        setDispPrompt(_T("\nEnter object direction "));
+        stat = drag();
+        if (stat == AcEdJig::kNormal)
+        {
+            count++;
+            setDispPrompt(_T("\nEnter object radius: "));
+            stat = drag();
+            if (stat == AcEdJig::kNormal)
+            {
+                append();
+            }
+        }
+    }    
 }
 
 Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const double dimValue)
@@ -140,7 +151,7 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
         pDimension->setDynamicDimension(true);
         pDimension->setXLine1Point(obj->getCenter());
         pDimension->setXLine2Point(Pt);
-        pDimension->setDimLinePoint(AcGePoint3d(obj->getR() * 0.75, 0, 0).transformBy(xMat));
+        pDimension->setDimLinePoint(Pt);
         AcDbDimData* pDimData = new AcDbDimData(pDimension);
         pDimData->setDimFocal(true);
         pDimData->setDimHideIfValueIsZero(true);
@@ -168,6 +179,31 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
     }
 
     return &m_dimData;
+}
+
+void CustomJig::updateDimensions()
+{ 
+    if (count == 1)
+    {
+        AcDbDimData* dimDataNC = m_dimData.getAt(0);
+        AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
+        AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
+        pAlnDim->setXLine1Point(obj->getCenter());
+        pAlnDim->setXLine2Point(Pt);
+        pAlnDim->setDimLinePoint(Pt);
+    }
+    else
+    if (count == 2)
+    {
+        AcGeMatrix3d xMat;
+        obj->get_Matrix(xMat);
+        AcDbDimData* dimDataNC = m_dimData.getAt(1);
+        AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
+        AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
+        pAlnDim->setXLine1Point(center);
+        pAlnDim->setXLine2Point(obj->getPt9().transformBy(xMat));
+        pAlnDim->setDimLinePoint(AcGePoint3d(0, obj->getR() / 2, 0).transformBy(xMat));
+    }
 }
 
 CustomJig::~CustomJig() 

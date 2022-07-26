@@ -14,6 +14,7 @@ public:
     virtual AcDbDimDataPtrArray* dimData(const double dimScale);
     virtual Acad::ErrorStatus setDimValue(const AcDbDimData* dimData,const double dimValue);
     virtual AcDbEntity* entity() const { return obj; };
+    void updateDimensions();
     AcDbDimDataPtrArray m_dimData;
 
 private:
