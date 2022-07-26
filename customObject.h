@@ -4,17 +4,11 @@ class OWNGripAppData
 {
 private:
     int ID; //идентификатор для Грипа
-    int gripSize;
-    AcDbDimDataPtrArray d;
 public:
     OWNGripAppData(int id) :ID(id){}
     virtual ~OWNGripAppData() {};
-    AcDbDimDataPtrArray getDimArray() const { return d; };
-    void setDimArray(const AcDbDimDataPtrArray dim) { this->d = dim; };
     int index() const { return ID; }
     void setIndex(const int id) { ID = id; }
-    void setGripSize(const int size) { gripSize = size; }
-    int getGripSize() const { return gripSize; }
 };
 class customObject : public AcDbEntity
 {

@@ -7,10 +7,14 @@ class CustomJig : public AcEdJig
 {
 public:
     CustomJig() { count = 0; };
+    virtual ~CustomJig();
     void startJig();
     virtual DragStatus sampler();
     virtual Adesk::Boolean update();
+    virtual AcDbDimDataPtrArray* dimData(const double dimScale);
+    virtual Acad::ErrorStatus setDimValue(const AcDbDimData* dimData,const double dimValue);
     virtual AcDbEntity* entity() const { return obj; };
+    AcDbDimDataPtrArray m_dimData;
 
 private:
     customObject* obj;

@@ -897,13 +897,15 @@ void customObject::centerGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pV
 {
     if (pThis == NULL)
         return;
-    OWNGripAppData* pAppData = (OWNGripAppData*)(pThis->appData());
-    int myGripSize = pAppData->getGripSize();
+    AcGePoint2d scale2d;
+    AcGePoint3d pntGrip = pThis->gripPoint();
+    pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
+    double gripUnits = 2 * gripSize / scale2d.x;
     // Получаем в точку наш гриппоинт
     AcGePoint3d gripPt = pThis->gripPoint();
     AcGeVector3d Normal{ 0,0,1 };
     pVd->subEntityTraits().setFillType(kAcGiFillAlways);
-    pVd->geometry().circle(gripPt, (double)myGripSize, Normal);
+    pVd->geometry().circle(gripPt, gripUnits, Normal);
 
     return;
 }
@@ -922,21 +924,23 @@ void customObject::radiusGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pV
     {
         return;
     }
-    OWNGripAppData* pAppData = (OWNGripAppData*)(pThis->appData());
-    int myGripSize = pAppData->getGripSize();
-    // Получаем в точку наш гриппоинт
+
     AcGePoint3d pntGrip = pThis->gripPoint();
     AcGeVector3d  vecXDir = obj->getDirection();
     AcGeVector3d  vecNormal = obj->getNormal();
+
+    AcGePoint2d scale2d;
+    pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
+    double gripUnits = 2 * gripSize / scale2d.x;
 
     AcGeMatrix3d xMat;
     xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
     pVd->geometry().pushModelTransform(xMat);
 
     AcGePoint3d* pts = new AcGePoint3d[3];
-    pts[0] = { (double)myGripSize,-(double)myGripSize/2,0 };
-    pts[1] = { 0,(double)myGripSize * 2,0 };
-    pts[2] = { -(double)myGripSize,-(double)myGripSize/2,0 };
+    pts[0] = { gripUnits,-gripUnits ,0 };
+    pts[1] = { 0,gripUnits,0 };
+    pts[2] = { -gripUnits,-gripUnits,0 };
 
     pVd->subEntityTraits().setFillType(kAcGiFillAlways);
     pVd->geometry().polygon(3, pts);
@@ -959,22 +963,24 @@ void customObject::stretchGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* p
     {
         return;
     }
-    OWNGripAppData* pAppData = (OWNGripAppData*)(pThis->appData());
-    int myGripSize = pAppData->getGripSize();
-    // Получаем в точку наш гриппоинт
+
     AcGePoint3d pntGrip = pThis->gripPoint();
     AcGeVector3d  vecXDir = obj->getDirection();
     AcGeVector3d  vecNormal = obj->getNormal();
+
+    AcGePoint2d scale2d;
+    pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
+    double gripUnits = 2 * gripSize / scale2d.x;
 
     AcGeMatrix3d xMat;
     xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
     pVd->geometry().pushModelTransform(xMat);
 
     AcGePoint3d* pts = new AcGePoint3d[4];
-    pts[0] = { (double)myGripSize ,(double)myGripSize ,0 };
-    pts[1] = { (double)myGripSize ,(double)-myGripSize ,0 };
-    pts[2] = { (double)-myGripSize ,(double)-myGripSize ,0 };
-    pts[3] = { (double)-myGripSize ,(double)myGripSize ,0 };
+    pts[0] = { gripUnits ,gripUnits ,0 };
+    pts[1] = { gripUnits ,-gripUnits ,0 };
+    pts[2] = { -gripUnits ,-gripUnits ,0 };
+    pts[3] = { -gripUnits ,gripUnits ,0 };
 
     pVd->subEntityTraits().setFillType(kAcGiFillAlways);
     pVd->geometry().polygon(4, pts);
@@ -998,22 +1004,24 @@ void customObject::rotateGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pV
     {
         return;
     }
-    OWNGripAppData* pAppData = (OWNGripAppData*)(pThis->appData());
-    int myGripSize = pAppData->getGripSize();
-    // Получаем в точку наш гриппоинт
+
     AcGePoint3d pntGrip = pThis->gripPoint();
     AcGeVector3d  vecXDir = obj->getDirection();
     AcGeVector3d  vecNormal = obj->getNormal();
+
+    AcGePoint2d scale2d;
+    pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
+    double gripUnits = 2 * gripSize / scale2d.x;
 
     AcGeMatrix3d xMat;
     xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
     pVd->geometry().pushModelTransform(xMat);
 
     AcGePoint3d* pts = new AcGePoint3d[4];
-    pts[0] = { 0 ,(double)myGripSize ,0 };
-    pts[1] = { (double)myGripSize ,0 ,0 };
-    pts[2] = { 0 ,(double)-myGripSize ,0 };
-    pts[3] = { (double)-myGripSize ,0 ,0 };
+    pts[0] = { 0 ,gripUnits ,0 };
+    pts[1] = { gripUnits ,0 ,0 };
+    pts[2] = { 0 ,-gripUnits ,0 };
+    pts[3] = { -gripUnits ,0 ,0 };
 
     pVd->subEntityTraits().setFillType(kAcGiFillAlways);
     pVd->geometry().polygon(4, pts);
@@ -1041,7 +1049,6 @@ void  customObject::MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  A
     pDimData->setDimValueFunc(setDimValueForH);
     dimDataArr.append(pDimData);
     mpDimData = pDimData;
-    pAlignedDim->close();
 }
 
 void  customObject::MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
@@ -1062,7 +1069,6 @@ void  customObject::MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  Ac
     pDimData->setDimValueFunc(setDimValueForRadius);
     dimDataArr.append(pDimData);
     mpDimData = pDimData;
-    pAlignedDim->close();
 }
 
 // Устанавливаем новое значение для внешнего радиуса
@@ -1121,7 +1127,6 @@ AcDbGripData* customObject::addGrip(const AcGePoint3d& PT, const int& gripIdx, c
     AcDbGripData* pGripData = new AcDbGripData();
     pGripData->setGripPoint(PT);
     OWNGripAppData* pAppData = new OWNGripAppData(gripIdx);
-    pAppData->setGripSize(curViewUnitSize*5);
     gripDataPtrArray.push_back(pAppData);  //Добавляем собственную грип дату в массив для дальнейшего удаления
     pGripData->setAppData(pAppData);
 
