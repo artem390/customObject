@@ -1051,7 +1051,7 @@ void  customObject::MyGripHotGripStretchpoints(AcDbGripData* pGripData, const  A
     mpDimData = pDimData;
 }
 
-void  customObject::MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
+void  customObject::MyGripHotGripRadiuspoints1(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
 {
     AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
     pAlignedDim->setDatabaseDefaults();
@@ -1066,13 +1066,52 @@ void  customObject::MyGripHotGripRadiuspoints(AcDbGripData* pGripData, const  Ac
     pDimData->setDimInvisible(false);
     pDimData->setDimResultantLength(true);
     pDimData->setDimHideIfValueIsZero(true);
-    pDimData->setDimValueFunc(setDimValueForRadius);
+    pDimData->setDimValueFunc(setDimValueForRadius1);
+    dimDataArr.append(pDimData);
+    mpDimData = pDimData;
+}
+void  customObject::MyGripHotGripRadiuspoints2(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
+{
+    AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
+    pAlignedDim->setDatabaseDefaults();
+    pAlignedDim->setDimsah(true);
+    pAlignedDim->setDimse1(true);
+    pAlignedDim->setDynamicDimension(true);
+    AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
+    pDimData->setOwnerId(entId);
+    pDimData->setDimFocal(true);
+    pDimData->setDimEditable(true);
+    pDimData->setDimRadius(true);
+    pDimData->setDimInvisible(false);
+    pDimData->setDimResultantLength(true);
+    pDimData->setDimHideIfValueIsZero(true);
+    pDimData->setDimValueFunc(setDimValueForRadius2);
+    dimDataArr.append(pDimData);
+    mpDimData = pDimData;
+}
+
+void  customObject::MyGripHotGripRadiuspoints3(AcDbGripData* pGripData, const  AcDbObjectId& entId, double  dimScale, AcDbDimDataPtrArray& dimDataArr)
+{
+    AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
+    pAlignedDim->setDatabaseDefaults();
+    pAlignedDim->setDimsah(true);
+    pAlignedDim->setDimse1(true);
+    pAlignedDim->setDynamicDimension(true);
+    AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
+    pDimData->setOwnerId(entId);
+    pDimData->setDimFocal(true);
+    pDimData->setDimEditable(true);
+    pDimData->setDimRadius(true);
+    pDimData->setDimInvisible(false);
+    pDimData->setDimResultantLength(true);
+    pDimData->setDimHideIfValueIsZero(true);
+    pDimData->setDimValueFunc(setDimValueForRadius3);
     dimDataArr.append(pDimData);
     mpDimData = pDimData;
 }
 
 // Устанавливаем новое значение для внешнего радиуса
-AcGeVector3d customObject::setDimValueForRadius(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
+AcGeVector3d customObject::setDimValueForRadius1(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
 {
 
     AcGeVector3d newOffset(offset);
@@ -1082,16 +1121,108 @@ AcGeVector3d customObject::setDimValueForRadius(AcDbDimData* pDimData, AcDbEntit
     customObject* obj = customObject::cast(pEnt);
 
     if (obj == NULL)
-        return  newOffset;
-    if ((newValue- obj->getminFrameThickness() - obj->getr1()) < obj->getminWindowThickness())
     {
-        obj->setr( obj->getr1() + obj->getminWindowThickness());
-        obj->setR(obj->getr() + obj->getminFrameThickness());
+        return  newOffset;
+    }
+    double diff = obj->getR() - obj->getr();
+    if ((newValue-diff) < (obj->getr1() + obj->getminWindowThickness()))
+    {
+        obj->setr(obj->getr1() + obj->getminWindowThickness()); 
+        if ((newValue) < (obj->getr() + obj->getminFrameThickness()))
+        {
+            obj->setR(obj->getr() + obj->getminFrameThickness());
+        }
+        else
+        {
+            obj->setR(newValue);
+        }
     }
     else
     {
         obj->setR(newValue);
-        obj->setR(newValue- obj->getminFrameThickness());
+        obj->setr(newValue-diff);
+    }
+    return  newOffset;
+}
+
+// Устанавливаем новое значение для среднего радиуса
+AcGeVector3d customObject::setDimValueForRadius2(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
+{
+    /*if ((r + len_OY) > (R - getminFrameThickness()))
+    {
+        r = R - getminFrameThickness();
+    }
+    else
+        if ((r + len_OY) < (r1 + getminWindowThickness()))
+        {
+            r = r1 + getminWindowThickness();
+        }
+        else
+        {
+            r += len_OY;
+        }*/
+    AcGeVector3d newOffset(offset);
+    if ((pDimData == NULL) || (pEnt == NULL))
+        return newOffset;
+
+    customObject* obj = customObject::cast(pEnt);
+
+    if (obj == NULL)
+    {
+        return  newOffset;
+    }
+    double diff = obj->getR() - obj->getr();
+    if ((newValue - diff) < (obj->getr1() + obj->getminWindowThickness()))
+    {
+        obj->setr(obj->getr1() + obj->getminWindowThickness());
+        if ((newValue) < (obj->getr() + obj->getminFrameThickness()))
+        {
+            obj->setR(obj->getr() + obj->getminFrameThickness());
+        }
+        else
+        {
+            obj->setR(newValue);
+        }
+    }
+    else
+    {
+        obj->setR(newValue);
+        obj->setr(newValue - diff);
+    }
+    return  newOffset;
+}
+
+// Устанавливаем новое значение для меньшего радиуса
+AcGeVector3d customObject::setDimValueForRadius3(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
+{
+
+    AcGeVector3d newOffset(offset);
+    if ((pDimData == NULL) || (pEnt == NULL))
+        return newOffset;
+
+    customObject* obj = customObject::cast(pEnt);
+
+    if (obj == NULL)
+    {
+        return  newOffset;
+    }
+    double diff = obj->getR() - obj->getr();
+    if ((newValue - diff) < (obj->getr1() + obj->getminWindowThickness()))
+    {
+        obj->setr(obj->getr1() + obj->getminWindowThickness());
+        if ((newValue) < (obj->getr() + obj->getminFrameThickness()))
+        {
+            obj->setR(obj->getr() + obj->getminFrameThickness());
+        }
+        else
+        {
+            obj->setR(newValue);
+        }
+    }
+    else
+    {
+        obj->setR(newValue);
+        obj->setr(newValue - diff);
     }
     return  newOffset;
 }
@@ -1133,10 +1264,16 @@ AcDbGripData* customObject::addGrip(const AcGePoint3d& PT, const int& gripIdx, c
     switch (gripIdx)
     {        
     case 1:
+        pGripData->setViewportDraw(radiusGripPointDraw);
+        pGripData->setHotGripDimensionFunc(MyGripHotGripRadiuspoints1);
+        break;
     case 2:
+        pGripData->setViewportDraw(radiusGripPointDraw);
+        pGripData->setHotGripDimensionFunc(MyGripHotGripRadiuspoints2);
+        break;
     case 3:   
         pGripData->setViewportDraw(radiusGripPointDraw);
-        pGripData->setHotGripDimensionFunc(MyGripHotGripRadiuspoints);
+        pGripData->setHotGripDimensionFunc(MyGripHotGripRadiuspoints3);
         break;
     case 4:
         pGripData->setViewportDraw(centerGripPointDraw);

@@ -81,34 +81,6 @@ void CustomJig::startJig()
 
 Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const double dimValue)
 {
-    if (count == 1)
-    {
-        AcDbDimData* dimDataNC = const_cast<AcDbDimData*>(dimData);
-        int inputNumber = -1;
-        if (m_dimData.find(dimDataNC, inputNumber)) {
-            if (inputNumber == 0)
-            {
-                AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
-                //- Check it's the type of dimension we want
-                AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
-                //- If ok
-                if (pAlnDim) {
-                    obj->setDirection(AcGeVector3d(Pt - center).normalize());
-                    //AcGePoint3d rotatePt = Pt;
-                    //rotatePt += offset;
-                    //AcGeVector3d vec(rotatePt - center);
-                    //obj->setDirection(vec.normalize());
-                    //pAlnDim->setXLine1Point(center);
-                    //pAlnDim->setXLine2Point(AcGePoint3d(dimValue,0,0));
-                    //pAlnDim->setDimLinePoint(AcGePoint3d(dimValue, 0, 0));
-                    //acutPrintf(L"\setdimvalue pEnd %.0f;%.0f;%.0f\n",pEnd.x,pEnd.y,pEnd.z);
-                    /*AcEdJig::DragStatus stat = AcEdJig::drag();*/
-                    /*pointTmp=dimEndNew;*/
-                }
-            }
-        }
-    }
-    else
     if (count == 2)
     {
         AcDbDimData* dimDataNC = const_cast<AcDbDimData*>(dimData);
@@ -121,7 +93,17 @@ Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const doubl
                 AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
                 //- If ok
                 if (pAlnDim) {
-                    obj->setR(dimValue);
+                    if (dimValue - obj->getminFrameThickness() < obj->getminWindowThickness())
+                    {
+                        obj->setr(obj->getr());
+                        obj->setR(obj->getR());
+                    }
+                    else
+                    {
+                        obj->setr(dimValue - obj->getminFrameThickness());
+                        obj->setR(dimValue);
+                    }
+                    updateDimensions();
                     //pAlnDim->setXLine1Point(center);
                     //pAlnDim->setXLine2Point(AcGePoint3d(0, dimValue, 0));
                     //pAlnDim->setDimLinePoint(AcGePoint3d(0, dimValue/2, 0));
@@ -185,24 +167,31 @@ void CustomJig::updateDimensions()
 { 
     if (count == 1)
     {
-        AcDbDimData* dimDataNC = m_dimData.getAt(0);
-        AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
-        AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
-        pAlnDim->setXLine1Point(obj->getCenter());
-        pAlnDim->setXLine2Point(Pt);
-        pAlnDim->setDimLinePoint(Pt);
+        if (m_dimData.size() >0)
+        {
+            AcDbDimData* dimDataNC = m_dimData.getAt(0);
+            AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
+            AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
+            pAlnDim->setXLine1Point(obj->getCenter());
+            pAlnDim->setXLine2Point(Pt);
+            pAlnDim->setDimLinePoint(Pt);
+        }     
     }
     else
     if (count == 2)
-    {
-        AcGeMatrix3d xMat;
-        obj->get_Matrix(xMat);
-        AcDbDimData* dimDataNC = m_dimData.getAt(1);
-        AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
-        AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
-        pAlnDim->setXLine1Point(center);
-        pAlnDim->setXLine2Point(obj->getPt9().transformBy(xMat));
-        pAlnDim->setDimLinePoint(AcGePoint3d(0, obj->getR() / 2, 0).transformBy(xMat));
+    {       
+        if (m_dimData.size() > 1)
+        {
+            AcGeMatrix3d xMat;
+            obj->get_Matrix(xMat);
+            AcDbDimData* dimDataNC = m_dimData.getAt(1);
+            AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
+            AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
+            pAlnDim->setXLine1Point(obj->getCenter());
+            pAlnDim->setXLine2Point(obj->getPt9().transformBy(xMat));
+            pAlnDim->setDimLinePoint(AcGePoint3d(0, obj->getR() / 2, 0).transformBy(xMat));
+        }
+            
     }
 }
 
