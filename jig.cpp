@@ -82,6 +82,11 @@ Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const doubl
                 AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
                 //- If ok
                 if (pAlnDim) {
+                    obj->setDirection(AcGeVector3d(Pt - center).normalize());
+                    //AcGePoint3d rotatePt = Pt;
+                    //rotatePt += offset;
+                    //AcGeVector3d vec(rotatePt - center);
+                    //obj->setDirection(vec.normalize());
                     //pAlnDim->setXLine1Point(center);
                     //pAlnDim->setXLine2Point(AcGePoint3d(dimValue,0,0));
                     //pAlnDim->setDimLinePoint(AcGePoint3d(dimValue, 0, 0));
@@ -105,6 +110,7 @@ Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const doubl
                 AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
                 //- If ok
                 if (pAlnDim) {
+                    obj->setR(dimValue);
                     //pAlnDim->setXLine1Point(center);
                     //pAlnDim->setXLine2Point(AcGePoint3d(0, dimValue, 0));
                     //pAlnDim->setDimLinePoint(AcGePoint3d(0, dimValue/2, 0));
@@ -133,8 +139,8 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
         pDimension->setHorizontalRotation(0.0);
         pDimension->setDynamicDimension(true);
         pDimension->setXLine1Point(obj->getCenter());
-        pDimension->setXLine2Point(AcGePoint3d(obj->getR()*1.5,0,0).transformBy(xMat));
-        pDimension->setDimLinePoint(AcGePoint3d(obj->getR() * 1.5, 0, 0).transformBy(xMat));
+        pDimension->setXLine2Point(Pt);
+        pDimension->setDimLinePoint(AcGePoint3d(obj->getR() * 0.75, 0, 0).transformBy(xMat));
         AcDbDimData* pDimData = new AcDbDimData(pDimension);
         pDimData->setDimFocal(true);
         pDimData->setDimHideIfValueIsZero(true);

@@ -900,7 +900,7 @@ void customObject::centerGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pV
     AcGePoint2d scale2d;
     AcGePoint3d pntGrip = pThis->gripPoint();
     pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
-    double gripUnits = 2 * gripSize / scale2d.x;
+    double gripUnits =  gripSize / scale2d.x;
     // ѕолучаем в точку наш гриппоинт
     AcGePoint3d gripPt = pThis->gripPoint();
     AcGeVector3d Normal{ 0,0,1 };
@@ -931,7 +931,7 @@ void customObject::radiusGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pV
 
     AcGePoint2d scale2d;
     pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
-    double gripUnits = 2 * gripSize / scale2d.x;
+    double gripUnits = gripSize / scale2d.x;
 
     AcGeMatrix3d xMat;
     xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
@@ -970,7 +970,7 @@ void customObject::stretchGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* p
 
     AcGePoint2d scale2d;
     pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
-    double gripUnits = 2 * gripSize / scale2d.x;
+    double gripUnits = gripSize / scale2d.x;
 
     AcGeMatrix3d xMat;
     xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
@@ -1011,7 +1011,7 @@ void customObject::rotateGripPointDraw(AcDbGripData* pThis, AcGiViewportDraw* pV
 
     AcGePoint2d scale2d;
     pVd->viewport().getNumPixelsInUnitSquare(pntGrip, scale2d);	// в пикселе единиц 
-    double gripUnits = 2 * gripSize / scale2d.x;
+    double gripUnits = gripSize / scale2d.x;
 
     AcGeMatrix3d xMat;
     xMat.setCoordSystem(pntGrip, vecXDir, (-1) * vecXDir.crossProduct(vecNormal), vecNormal);
