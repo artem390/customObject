@@ -1148,19 +1148,6 @@ AcGeVector3d customObject::setDimValueForRadius1(AcDbDimData* pDimData, AcDbEnti
 // Устанавливаем новое значение для среднего радиуса
 AcGeVector3d customObject::setDimValueForRadius2(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
 {
-    /*if ((r + len_OY) > (R - getminFrameThickness()))
-    {
-        r = R - getminFrameThickness();
-    }
-    else
-        if ((r + len_OY) < (r1 + getminWindowThickness()))
-        {
-            r = r1 + getminWindowThickness();
-        }
-        else
-        {
-            r += len_OY;
-        }*/
     AcGeVector3d newOffset(offset);
     if ((pDimData == NULL) || (pEnt == NULL))
         return newOffset;
@@ -1171,23 +1158,18 @@ AcGeVector3d customObject::setDimValueForRadius2(AcDbDimData* pDimData, AcDbEnti
     {
         return  newOffset;
     }
-    double diff = obj->getR() - obj->getr();
-    if ((newValue - diff) < (obj->getr1() + obj->getminWindowThickness()))
+    if (newValue > (obj->getR() - obj->getminFrameThickness()))
+    {
+        obj->setr(obj->getR() - obj->getminFrameThickness());
+    }
+    else
+    if (newValue < (obj->getr1() + obj->getminWindowThickness()))
     {
         obj->setr(obj->getr1() + obj->getminWindowThickness());
-        if ((newValue) < (obj->getr() + obj->getminFrameThickness()))
-        {
-            obj->setR(obj->getr() + obj->getminFrameThickness());
-        }
-        else
-        {
-            obj->setR(newValue);
-        }
     }
     else
     {
-        obj->setR(newValue);
-        obj->setr(newValue - diff);
+        obj->setr(newValue);
     }
     return  newOffset;
 }
@@ -1206,23 +1188,20 @@ AcGeVector3d customObject::setDimValueForRadius3(AcDbDimData* pDimData, AcDbEnti
     {
         return  newOffset;
     }
-    double diff = obj->getR() - obj->getr();
-    if ((newValue - diff) < (obj->getr1() + obj->getminWindowThickness()))
+
+
+    if (newValue > (obj->getr() - obj->getminWindowThickness()))
     {
-        obj->setr(obj->getr1() + obj->getminWindowThickness());
-        if ((newValue) < (obj->getr() + obj->getminFrameThickness()))
-        {
-            obj->setR(obj->getr() + obj->getminFrameThickness());
-        }
-        else
-        {
-            obj->setR(newValue);
-        }
+        obj->setr1(obj->getr() - obj->getminWindowThickness());
+    }
+    else
+    if (obj->getH() > 2 * newValue * sin(PI / 8))
+    {
+        obj->setr1(obj->getH() / (2 * sin(PI / 8)));
     }
     else
     {
-        obj->setR(newValue);
-        obj->setr(newValue - diff);
+        obj->setr1(newValue);
     }
     return  newOffset;
 }
