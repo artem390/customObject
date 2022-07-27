@@ -1055,14 +1055,14 @@ void  customObject::MyGripHotGripRadiuspoints1(AcDbGripData* pGripData, const  A
 {
     AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
     pAlignedDim->setDatabaseDefaults();
-    pAlignedDim->setDimsah(true);
-    pAlignedDim->setDimse1(true);
+    //pAlignedDim->setDimsah(true);
+    //pAlignedDim->setDimse1(true);
     pAlignedDim->setDynamicDimension(true);
     AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
     pDimData->setOwnerId(entId);
     pDimData->setDimFocal(true);
     pDimData->setDimEditable(true);
-    pDimData->setDimRadius(true);
+    pDimData->setDimRadius(false);
     pDimData->setDimInvisible(false);
     pDimData->setDimResultantLength(true);
     pDimData->setDimHideIfValueIsZero(true);
@@ -1119,7 +1119,7 @@ AcGeVector3d customObject::setDimValueForRadius1(AcDbDimData* pDimData, AcDbEnti
         return newOffset;
 
     customObject* obj = customObject::cast(pEnt);
-
+    //customObject* obj = dynamic_cast<customObject*>(pEnt);
     if (obj == NULL)
     {
         return  newOffset;
