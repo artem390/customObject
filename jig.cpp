@@ -190,7 +190,9 @@ void CustomJig::updateDimensions()
     if (count == 2)
     {   
         AcDbDimData* dimDataNC = m_dimData->getAt(0);
+        dimDataNC->setDimEditable(false);
         dimDataNC->setDimInvisible(true);
+        dimDataNC->setDimFocal(false);
         if (m_dimData->size() > 1)
         {
             AcGeMatrix3d xMat;
