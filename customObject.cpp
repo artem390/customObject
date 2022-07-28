@@ -1055,8 +1055,6 @@ void  customObject::MyGripHotGripRadiuspoints1(AcDbGripData* pGripData, const  A
 {
     AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
     pAlignedDim->setDatabaseDefaults();
-    //pAlignedDim->setDimsah(true);
-    //pAlignedDim->setDimse1(true);
     pAlignedDim->setDynamicDimension(true);
     AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
     pDimData->setOwnerId(entId);
@@ -1074,8 +1072,6 @@ void  customObject::MyGripHotGripRadiuspoints2(AcDbGripData* pGripData, const  A
 {
     AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
     pAlignedDim->setDatabaseDefaults();
-    pAlignedDim->setDimsah(true);
-    pAlignedDim->setDimse1(true);
     pAlignedDim->setDynamicDimension(true);
     AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
     pDimData->setOwnerId(entId);
@@ -1094,8 +1090,6 @@ void  customObject::MyGripHotGripRadiuspoints3(AcDbGripData* pGripData, const  A
 {
     AcDbAlignedDimension* pAlignedDim = new  AcDbAlignedDimension();
     pAlignedDim->setDatabaseDefaults();
-    pAlignedDim->setDimsah(true);
-    pAlignedDim->setDimse1(true);
     pAlignedDim->setDynamicDimension(true);
     AcDbDimData* pDimData = new  AcDbDimData(pAlignedDim);
     pDimData->setOwnerId(entId);

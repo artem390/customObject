@@ -5,7 +5,16 @@ CustomJig::CustomJig()
 {
     count = 0; 
     m_dimData = new AcDbDimDataPtrArray();
-    obj = new customObject();
+    m_obj = new customObject();
+}
+
+CustomJig::~CustomJig()
+{
+    for (int i = 0; i < m_dimData->length(); i++) {
+        AcDbDimData* pData = (*m_dimData)[i];
+        delete pData;
+    }
+    m_dimData->setLogicalLength(0);
 }
 
 AcEdJig::DragStatus CustomJig::sampler()
@@ -17,11 +26,11 @@ AcEdJig::DragStatus CustomJig::sampler()
             | AcEdJig::kAcceptOtherInputString));
     DragStatus stat = AcEdJig::kNormal;
     AcGePoint3d tempPt;
-    stat = acquirePoint(Pt, center);
+    stat = acquirePoint(m_Pt, m_center);
 
-    if (tempPt != Pt)
+    if (tempPt != m_Pt)
     {
-        tempPt = Pt;
+        tempPt = m_Pt;
     }
     else
         if (stat == AcEdJig::kNormal)
@@ -35,26 +44,26 @@ Adesk::Boolean CustomJig::update()
 {
     if (count == 0)
     {
-        obj->setCenter(Pt);
+        m_obj->setCenter(m_Pt);
     }
     else
     if (count == 1)
     {
-        obj->setDirection(AcGeVector3d(Pt - center).normalize());
+        m_obj->setDirection(AcGeVector3d(m_Pt - m_center).normalize());
     }
     else if (count == 2)
     {
-        AcGeVector3d offset{ center - Pt };
+        AcGeVector3d offset{ m_center - m_Pt };
         double R = offset.length();
-        if (R - obj->getminFrameThickness() < obj->getminWindowThickness())
+        if (R - m_obj->getminFrameThickness() < m_obj->getminWindowThickness())
         {
-            obj->setr(obj->getr());
-            obj->setR(obj->getR());
+            m_obj->setr(m_obj->getr());
+            m_obj->setR(m_obj->getR());
         }
         else
         {
-            obj->setr(R - obj->getminFrameThickness());
-            obj->setR(R);
+            m_obj->setr(R - m_obj->getminFrameThickness());
+            m_obj->setR(R);
         }
 
     }
@@ -69,7 +78,7 @@ void CustomJig::startJig()
     if (stat == AcEdJig::kNormal)
     {
         count++;
-        center = obj->getCenter();
+        m_center = m_obj->getCenter();
         setDispPrompt(_T("\nEnter object direction "));
         stat = drag();
         if (stat == AcEdJig::kNormal)
@@ -81,23 +90,35 @@ void CustomJig::startJig()
             {
                 append();
             }
+            else
+            {
+                delete m_obj;
+            }
         }
-    }    
+        else
+        {
+            delete m_obj;
+        }
+    }
+    else
+    {
+        delete m_obj;
+    }
 }
 
 Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const double dimValue)
 {
     if (count == 2)
     {
-        if (dimValue - obj->getminFrameThickness() < obj->getminWindowThickness())
+        if (dimValue - m_obj->getminFrameThickness() < m_obj->getminWindowThickness())
         {
-            obj->setr(obj->getr());
-            obj->setR(obj->getR());
+            m_obj->setr(m_obj->getr());
+            m_obj->setR(m_obj->getR());
         }
         else
         {
-            obj->setr(dimValue - obj->getminFrameThickness());
-            obj->setR(dimValue);
+            m_obj->setr(dimValue - m_obj->getminFrameThickness());
+            m_obj->setR(dimValue);
         }
     }
 
@@ -107,25 +128,19 @@ Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const doubl
 AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
 {
     AcGeMatrix3d xMat;
-    obj->get_Matrix(xMat);
-    for (int i = 0; i < m_dimData->length(); i++) {
-        AcDbDimData* pData = (*m_dimData)[i];
-        delete pData;
-    }
-    m_dimData->setLogicalLength(0);
+    m_obj->get_Matrix(xMat);
     
     if (count == 1)
     {
-        AcDbAlignedDimension* pDimension = new AcDbAlignedDimension;
+        AcDb3PointAngularDimension* pDimension = new AcDb3PointAngularDimension;
         pDimension->setDatabaseDefaults();
         pDimension->setNormal(AcGeVector3d::kZAxis);
         pDimension->setElevation(0.0);
         pDimension->setDimscale(dimScale);
         pDimension->setHorizontalRotation(0.0);
         pDimension->setDynamicDimension(true);
-        pDimension->setXLine1Point(obj->getCenter());
-        pDimension->setXLine2Point(Pt);
-        pDimension->setDimLinePoint(Pt);
+        pDimension->setXLine1Point(m_obj->getCenter());
+        pDimension->setXLine2Point(m_Pt);
         pDimension->setDimtad(1);
         AcDbDimData* pDimData = new AcDbDimData(pDimension);
         pDimData->setDimFocal(true);
@@ -143,9 +158,9 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
         pDimension->setDimscale(dimScale);
         pDimension->setHorizontalRotation(0.0);
         pDimension->setDynamicDimension(true);
-        pDimension->setXLine1Point(obj->getCenter());
-        pDimension->setXLine2Point(obj->getPt9().transformBy(xMat));
-        pDimension->setDimLinePoint(AcGePoint3d(0, obj->getR() / 2, 0).transformBy(xMat));
+        pDimension->setXLine1Point(m_obj->getCenter());
+        pDimension->setXLine2Point(m_obj->getPt9().transformBy(xMat));
+        pDimension->setDimLinePoint(AcGePoint3d(0, m_obj->getR() / 2, 0).transformBy(xMat));
         pDimension->setDimtad(1);
         AcDbDimData* pDimData = new AcDbDimData(pDimension);
         pDimData->setDimFocal(true);
@@ -156,12 +171,6 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
 
     return m_dimData;
 }
-
-AcDbDimDataPtrArray* CustomJig::dimData() const
-{
-    return m_dimData;
-}
-
 
 void CustomJig::updateDimensions()
 { 
@@ -172,33 +181,27 @@ void CustomJig::updateDimensions()
         {
             AcDbDimData* dimDataNC = m_dimData->getAt(0);
             AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
-            AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
-            pAlnDim->setXLine1Point(obj->getCenter());
-            pAlnDim->setXLine2Point(Pt);
-            pAlnDim->setDimLinePoint(Pt);
-
+            AcDb3PointAngularDimension* pAlnDim = AcDb3PointAngularDimension::cast(pDim);
+            pAlnDim->setXLine1Point(m_obj->getCenter());
+            pAlnDim->setXLine2Point(m_Pt);
         }     
     }
     else
     if (count == 2)
-    {       
-        if (m_dimData->size() > 0)
+    {   
+        AcDbDimData* dimDataNC = m_dimData->getAt(0);
+        dimDataNC->setDimInvisible(true);
+        if (m_dimData->size() > 1)
         {
             AcGeMatrix3d xMat;
-            obj->get_Matrix(xMat);
-            AcDbDimData* dimDataNC = m_dimData->getAt(0);
+            m_obj->get_Matrix(xMat);
+            AcDbDimData* dimDataNC = m_dimData->getAt(1);
             AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
             AcDbAlignedDimension* pAlnDim = AcDbAlignedDimension::cast(pDim);
-            pAlnDim->setXLine1Point(obj->getCenter());
-            pAlnDim->setXLine2Point(obj->getPt9().transformBy(xMat));
-            pAlnDim->setDimLinePoint(AcGePoint3d(0, obj->getR() / 2, 0).transformBy(xMat));
+            pAlnDim->setXLine1Point(m_obj->getCenter());
+            pAlnDim->setXLine2Point(m_obj->getPt9().transformBy(xMat));
+            pAlnDim->setDimLinePoint(AcGePoint3d(0, m_obj->getR() / 2, 0).transformBy(xMat));
         }
             
     }
-}
-
-CustomJig::~CustomJig() 
-{
-    delete[] m_dimData;
-    delete obj;
 }

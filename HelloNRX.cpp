@@ -115,6 +115,7 @@ void addJig()
 {
 	CustomJig* jig = new CustomJig();
 	jig->startJig();
+	delete jig;
 }
 
 extern "C" __declspec(dllexport) AcRx::AppRetCode
