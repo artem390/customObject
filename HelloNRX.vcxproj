@@ -312,7 +312,7 @@
   <ItemGroup>
     <ClInclude Include="customObject.h" />
     <ClInclude Include="dialog.h" />
-    <ClInclude Include="jigHeader.h" />
+    <ClInclude Include="jig.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "jigHeader.h"
+#include "jig.h"
 
 CustomJig::CustomJig()
 {
@@ -50,7 +50,14 @@ Adesk::Boolean CustomJig::update()
     else
     if (count == 1)
     {
-        m_obj->setDirection(AcGeVector3d(m_Pt - m_center).normalize());
+        if (m_Pt == m_center)
+        {
+            m_obj->setDirection(AcGeVector3d{ 1,0,0 });
+        }
+        else
+        {
+            m_obj->setDirection(AcGeVector3d(m_Pt - m_center).normalize());
+        }        
     }
     else if (count == 2)
     {
@@ -186,12 +193,24 @@ void CustomJig::updateDimensions()
             AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
             AcDb3PointAngularDimension* pAlnDim = AcDb3PointAngularDimension::cast(pDim);
 
+            
             AcGeVector3d vec1(m_obj->getPt5().transformBy(xMat)- m_center);
             AcGeVector3d vec2(AcGePoint3d(m_center.x+m_obj->getR(), m_center.y,0) - m_center); 
-            AcGeVector3d bisVector(vec1+vec2);
-            AcGePoint3d arcPt = m_center + (bisVector.normalize()* m_obj->getR()*1.5) ;
-            pAlnDim->setArcPoint(arcPt);
-            
+            if (m_center.y == m_Pt.y)
+            {
+                pAlnDim->setArcPoint(AcGePoint3d(0,m_obj->getR()*1.5,0).transformBy(xMat));
+            }
+            else
+            {
+                AcGeVector3d bisVector(vec1 + vec2);
+                if (m_center.y > m_Pt.y)
+                {
+                    bisVector.negate();
+                }
+                AcGePoint3d arcPt = m_center + (bisVector.normalize() * m_obj->getR() * 1.5);
+                pAlnDim->setArcPoint(arcPt);
+            }
+                
             AcGePoint3d xLine1Pt;
             AcGeLineSeg3d line1(m_center, AcGePoint3d(m_center.x + m_obj->getR(), m_center.y, 0));
             AcGeLineSeg3d line2(m_obj->getPt1().transformBy(xMat), m_obj->getPt6().transformBy(xMat));

@@ -3,7 +3,7 @@
 #include "dialog.h"
 #include "AcExtensionModule.h"
 //#include <rxregsvc.h>
-#include "jigHeader.h"
+#include "jig.h"
 //#include "afxdialogex.h"
 #include "extension.h"
 //#include <afxext.h>

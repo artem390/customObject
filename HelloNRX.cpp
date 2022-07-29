@@ -6,7 +6,7 @@
 #include <dbents.h>
 #include <dbgroup.h>
 #include "customObject.h"
-#include "jigHeader.h"
+#include "jig.h"
 #include "dialog.h"
 void initApp();
 void unloadApp();
