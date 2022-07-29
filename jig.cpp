@@ -29,7 +29,7 @@ AcEdJig::DragStatus CustomJig::sampler()
     AcGePoint3d tempPt;
     stat = acquirePoint(m_Pt, m_center);
 
-    if (tempPt != m_Pt)
+    if (!tempPt.isEqualTo(m_Pt))
     {
         tempPt = m_Pt;
     }
@@ -50,7 +50,7 @@ Adesk::Boolean CustomJig::update()
     else
     if (count == 1)
     {
-        if (m_Pt == m_center)
+        if (m_Pt.isEqualTo(m_center))
         {
             m_obj->setDirection(AcGeVector3d{ 1,0,0 });
         }
@@ -196,9 +196,9 @@ void CustomJig::updateDimensions()
             
             AcGeVector3d vec1(m_obj->getPt5().transformBy(xMat)- m_center);
             AcGeVector3d vec2(AcGePoint3d(m_center.x+m_obj->getR(), m_center.y,0) - m_center); 
-            if (m_center.y == m_Pt.y)
+            if (abs(vec1.angleTo(vec2)-PI)<0.000001)
             {
-                pAlnDim->setArcPoint(AcGePoint3d(0,m_obj->getR()*1.5,0).transformBy(xMat));
+                pAlnDim->setArcPoint(AcGePoint3d(0,-m_obj->getR()*1.5,0).transformBy(xMat));
             }
             else
             {
