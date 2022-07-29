@@ -24,6 +24,7 @@ AcEdJig::DragStatus CustomJig::sampler()
             | AcEdJig::kNoNegativeResponseAccepted
             | AcEdJig::kNoZeroResponseAccepted
             | AcEdJig::kAcceptOtherInputString));
+
     DragStatus stat = AcEdJig::kNormal;
     AcGePoint3d tempPt;
     stat = acquirePoint(m_Pt, m_center);
@@ -89,25 +90,25 @@ void CustomJig::startJig()
             if (stat == AcEdJig::kNormal)
             {
                 append();
-            }
-            else
-            {
-                delete m_obj;
+                return;
             }
         }
-        else
-        {
-            delete m_obj;
-        }
     }
-    else
-    {
-        delete m_obj;
-    }
+    delete m_obj;
 }
 
 Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const double dimValue)
 {
+    if (count == 1)
+    {
+        AcGeVector3d direction{ 1,0,0 };
+        double cs = cos(dimValue);
+        double sn = sin(dimValue);
+        double rx = direction.x * cs - direction.y * sn;
+        double ry = direction.x * sn + direction.y * cs;
+        m_obj->setDirection(AcGeVector3d{rx,ry,0});
+    }
+    else
     if (count == 2)
     {
         if (dimValue - m_obj->getminFrameThickness() < m_obj->getminWindowThickness())
@@ -139,8 +140,9 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
         pDimension->setDimscale(dimScale);
         pDimension->setHorizontalRotation(0.0);
         pDimension->setDynamicDimension(true);
-        pDimension->setXLine1Point(m_obj->getCenter());
-        pDimension->setXLine2Point(m_Pt);
+        pDimension->setXLine1Point(m_obj->getPt5().transformBy(xMat));
+        pDimension->setXLine2Point(m_obj->getPt5().transformBy(xMat));
+        pDimension->setCenterPoint(m_obj->getCenter());
         pDimension->setDimtad(1);
         AcDbDimData* pDimData = new AcDbDimData(pDimension);
         pDimData->setDimFocal(true);
@@ -174,16 +176,57 @@ AcDbDimDataPtrArray* CustomJig::dimData(const double dimScale)
 
 void CustomJig::updateDimensions()
 { 
-
     if (count == 1)
     {
         if (m_dimData->size() >0)
         {
+            AcGeMatrix3d xMat;
+            m_obj->get_Matrix(xMat);
             AcDbDimData* dimDataNC = m_dimData->getAt(0);
             AcDbDimension* pDim = (AcDbDimension*)dimDataNC->dimension();
             AcDb3PointAngularDimension* pAlnDim = AcDb3PointAngularDimension::cast(pDim);
-            pAlnDim->setXLine1Point(m_obj->getCenter());
-            pAlnDim->setXLine2Point(m_Pt);
+
+            AcGeVector3d vec1(m_obj->getPt5().transformBy(xMat)- m_center);
+            AcGeVector3d vec2(AcGePoint3d(m_center.x+m_obj->getR(), m_center.y,0) - m_center); 
+            AcGeVector3d bisVector(vec1+vec2);
+            AcGePoint3d arcPt = m_center + (bisVector.normalize()* m_obj->getR()*1.5) ;
+            pAlnDim->setArcPoint(arcPt);
+            
+            AcGePoint3d xLine1Pt;
+            AcGeLineSeg3d line1(m_center, AcGePoint3d(m_center.x + m_obj->getR(), m_center.y, 0));
+            AcGeLineSeg3d line2(m_obj->getPt1().transformBy(xMat), m_obj->getPt6().transformBy(xMat));
+            if (line1.intersectWith(line2, xLine1Pt))
+            {
+                pAlnDim->setXLine1Point(xLine1Pt);
+            }
+            else
+            {
+                AcGeLineSeg3d line3(m_obj->getPt5().transformBy(xMat), m_obj->getPt6().transformBy(xMat));
+                if (line1.intersectWith(line3, xLine1Pt))
+                {
+                    pAlnDim->setXLine1Point(xLine1Pt);
+                }
+                else
+                {
+                    AcGeLineSeg3d line4(m_obj->getPt1().transformBy(xMat), m_obj->getPt2().transformBy(xMat));
+                    if (line1.intersectWith(line4, xLine1Pt))
+                    {
+                        pAlnDim->setXLine1Point(xLine1Pt);
+                    }
+                    else
+                    {
+                        AcGeCircArc3d circArc(m_obj->getPt2().transformBy(xMat), m_obj->getPt9().transformBy(xMat), m_obj->getPt5().transformBy(xMat));
+                        int intersectsCount;
+                        AcGePoint3d Pt2;
+                        if (circArc.intersectWith(line1, intersectsCount, xLine1Pt, Pt2))
+                        {
+                            pAlnDim->setXLine1Point(xLine1Pt);
+                        }
+                    }
+                }
+            }
+
+            pAlnDim->setXLine2Point(m_obj->getPt5().transformBy(xMat));
         }     
     }
     else
