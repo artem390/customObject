@@ -38,7 +38,7 @@ public:
     static AcGeVector3d setDimValueForH(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset);
     // Для обновления динамического размера
     static  bool  updateDimensions(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
-    static  bool  updateDimensions1(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
+    static  bool  updateStretchDimensions(customObject* customObject, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt);
     // Для сохр. данных при загрузке/выгрузке
     virtual Acad::ErrorStatus dwgOutFields(AcDbDwgFiler*) const override;
     virtual Acad::ErrorStatus dwgInFields(AcDbDwgFiler*) override;

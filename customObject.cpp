@@ -774,7 +774,7 @@ Acad::ErrorStatus customObject::subMoveGripPointsAt(
             {
                 h += (len_OX * 2);
             }
-            updateDimensions1(this, AcGePoint3d(-h / 2, -R+r, 0), AcGePoint3d(h / 2, -R+r, 0));
+            updateStretchDimensions(this, AcGePoint3d(-h / 2, -R+r, 0), AcGePoint3d(h / 2, -R+r, 0));
             return Acad::eOk;
         case 7:
             AcGeMatrix3d xMat;
@@ -859,8 +859,8 @@ bool  customObject::updateDimensions(customObject* obj, const AcGePoint3d& xline
     }
     return  true;
 }
-
-bool  customObject::updateDimensions1(customObject* obj, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt)
+//Функция обновления динамического размера для столбцов
+bool  customObject::updateStretchDimensions(customObject* obj, const AcGePoint3d& xline1Pt, const AcGePoint3d& xline2Pt)
 {
     if (!obj || !mpDimData)
         return  false;
@@ -1107,16 +1107,13 @@ void  customObject::MyGripHotGripRadiuspoints3(AcDbGripData* pGripData, const  A
 // Устанавливаем новое значение для внешнего радиуса
 AcGeVector3d customObject::setDimValueForRadius1(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
 {
-
-    AcGeVector3d newOffset(offset);
     if ((pDimData == NULL) || (pEnt == NULL))
-        return newOffset;
+        return offset;
 
     customObject* obj = customObject::cast(pEnt);
-    //customObject* obj = dynamic_cast<customObject*>(pEnt);
     if (obj == NULL)
     {
-        return  newOffset;
+        return  offset;
     }
     double diff = obj->getR() - obj->getr();
     if ((newValue-diff) < (obj->getr1() + obj->getminWindowThickness()))
@@ -1136,21 +1133,21 @@ AcGeVector3d customObject::setDimValueForRadius1(AcDbDimData* pDimData, AcDbEnti
         obj->setR(newValue);
         obj->setr(newValue-diff);
     }
-    return  newOffset;
+    obj->recordGraphicsModified(true);
+    return  offset;
 }
 
 // Устанавливаем новое значение для среднего радиуса
 AcGeVector3d customObject::setDimValueForRadius2(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
 {
-    AcGeVector3d newOffset(offset);
     if ((pDimData == NULL) || (pEnt == NULL))
-        return newOffset;
+        return offset;
 
     customObject* obj = customObject::cast(pEnt);
 
     if (obj == NULL)
     {
-        return  newOffset;
+        return  offset;
     }
     if (newValue > (obj->getR() - obj->getminFrameThickness()))
     {
@@ -1165,22 +1162,21 @@ AcGeVector3d customObject::setDimValueForRadius2(AcDbDimData* pDimData, AcDbEnti
     {
         obj->setr(newValue);
     }
-    return  newOffset;
+    obj->recordGraphicsModified(true);
+    return  offset;
 }
 
 // Устанавливаем новое значение для меньшего радиуса
 AcGeVector3d customObject::setDimValueForRadius3(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
 {
-
-    AcGeVector3d newOffset(offset);
     if ((pDimData == NULL) || (pEnt == NULL))
-        return newOffset;
+        return offset;
 
     customObject* obj = customObject::cast(pEnt);
 
     if (obj == NULL)
     {
-        return  newOffset;
+        return  offset;
     }
 
 
@@ -1197,19 +1193,19 @@ AcGeVector3d customObject::setDimValueForRadius3(AcDbDimData* pDimData, AcDbEnti
     {
         obj->setr1(newValue);
     }
-    return  newOffset;
+    obj->recordGraphicsModified(true);
+    return  offset;
 }
 
 AcGeVector3d customObject::setDimValueForH(AcDbDimData* pDimData, AcDbEntity* pEnt, double  newValue, const  AcGeVector3d& offset)
 {
-    AcGeVector3d newOffset(offset);
     if ((pDimData == NULL) || (pEnt == NULL))
-        return newOffset;
+        return offset;
 
     customObject* obj = customObject::cast(pEnt);
 
     if (obj == NULL)
-        return  newOffset;
+        return  offset;
     if (newValue > obj->getHmax())
     {
         obj->setH(obj->getHmax());
@@ -1223,7 +1219,8 @@ AcGeVector3d customObject::setDimValueForH(AcDbDimData* pDimData, AcDbEntity* pE
     {
          obj->setH(newValue);
     }
-    return  newOffset;
+    obj->recordGraphicsModified(true);
+    return  offset;
 }
 // Функция добавления грипа ========
 AcDbGripData* customObject::addGrip(const AcGePoint3d& PT, const int& gripIdx, const double curViewUnitSize) const

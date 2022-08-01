@@ -5,7 +5,6 @@ CustomJig::CustomJig()
 {
     count = 0; 
     m_dimData = new AcDbDimDataPtrArray();
-    m_obj = new customObject();
 }
 
 CustomJig::~CustomJig()
@@ -14,7 +13,7 @@ CustomJig::~CustomJig()
         AcDbDimData* pData = (*m_dimData)[i];
         delete pData;
     }
-    m_dimData->setLogicalLength(0);
+    delete m_dimData;
 }
 
 AcEdJig::DragStatus CustomJig::sampler()
@@ -63,12 +62,7 @@ Adesk::Boolean CustomJig::update()
     {
         AcGeVector3d offset{ m_center - m_Pt };
         double R = offset.length();
-        if (R - m_obj->getminFrameThickness() < m_obj->getminWindowThickness())
-        {
-            m_obj->setr(m_obj->getr());
-            m_obj->setR(m_obj->getR());
-        }
-        else
+        if (R - m_obj->getminFrameThickness() >= m_obj->getminWindowThickness())
         {
             m_obj->setr(R - m_obj->getminFrameThickness());
             m_obj->setR(R);
@@ -81,6 +75,7 @@ Adesk::Boolean CustomJig::update()
 
 void CustomJig::startJig()
 {
+    m_obj = new customObject();
     setDispPrompt(_T("\nEnter object center "));
     AcEdJig::DragStatus stat = drag();
     if (stat == AcEdJig::kNormal)
@@ -120,8 +115,8 @@ Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const doubl
     {
         if (dimValue - m_obj->getminFrameThickness() < m_obj->getminWindowThickness())
         {
-            m_obj->setr(m_obj->getr());
-            m_obj->setR(m_obj->getR());
+            m_obj->setr(m_obj->getr1()+ m_obj->getminWindowThickness());
+            m_obj->setR(m_obj->getr()+ m_obj->getminFrameThickness());
         }
         else
         {
