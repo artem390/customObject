@@ -2,21 +2,15 @@
 #include "stdafx.h"
 #include "dialog.h"
 #include "AcExtensionModule.h"
-//#include <rxregsvc.h>
 #include "jig.h"
-//#include "afxdialogex.h"
 #include "extension.h"
-//#include <afxext.h>
-//#include <AtlBase.h>
-//#include <AtlCom.h>
 using namespace ATL;
 
 #include "dbxHeaders.h"
-// Диалоговое окно button
 IMPLEMENT_DYNAMIC(MyDlg, CDialog)
 
 MyDlg::MyDlg(CWnd* pParent)
-	: CDialog(IDD_DIALOG1, pParent), currentСommand(3)
+	: CDialog(IDD_DIALOG1, pParent), currentСommand(2)
 {
 }
 
@@ -26,29 +20,18 @@ MyDlg::~MyDlg()
 
 void MyDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialog::DoDataExchange(pDX);
-    // Получение информации о направлении
-    //DDX_CBString(pDX, IDC_COMBO1, rivet_direction);
-    //// Получение длины и диаметра
-    //DDX_Text(pDX, IDC_EDIT2, m_rivet_length);
-    //DDX_Text(pDX, IDC_EDIT3, m_rivet_diam);
-
-    //// Ограничение по максимуму/минимуму
-    //DDV_MinMaxDouble(pDX, m_rivet_length, 30, 1000);
-    //DDV_MinMaxDouble(pDX, m_rivet_diam, 10, 60);
-
+    CDialog::DoDataExchange(pDX); 
 }
 
 
 BEGIN_MESSAGE_MAP(MyDlg, CDialog)
-   /* ON_BN_CLICKED(IDC_RADIO1, &MyDlg::OnBnClickedRadio1)
+    ON_BN_CLICKED(IDC_RADIO1, &MyDlg::OnBnClickedRadio1)
     ON_BN_CLICKED(IDC_RADIO2, &MyDlg::OnBnClickedRadio2)
     ON_BN_CLICKED(IDC_RADIO3, &MyDlg::OnBnClickedRadio3)
- 
+    ON_EN_CHANGE(IDC_EDIT1, &MyDlg::OnEnChangeEdit1)
     ON_EN_CHANGE(IDC_EDIT2, &MyDlg::OnEnChangeEdit2)
     ON_EN_CHANGE(IDC_EDIT3, &MyDlg::OnEnChangeEdit3)
-
-    ON_CBN_SELCHANGE(IDC_COMBO1, &MyDlg::OnCbnSelchangeCombo1)*/
+    ON_EN_CHANGE(IDC_EDIT4, &MyDlg::OnEnChangeEdit4)
 END_MESSAGE_MAP()
 
 
@@ -56,7 +39,6 @@ NC_IMPLEMENT_EXTENSION_MODULE(theArxDLL);
 
 HINSTANCE _hdllInstance = NULL;
 extern "C" int APIENTRY
-//extern "C"  int _afxForceUSRDLL;
 DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
 
     // Remove this if you use lpReserved
@@ -73,132 +55,199 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
 }
 
 
-
-void MyDlg::OnEnChangeEdit2()
-{
-}
-
-void MyDlg::OnEnChangeEdit3()
-{
-}
-
-
-
-// создать произвольная заклепка
-void MyDlg::OnBnClickedRadio1()
-{
-    make_edit_disabled(0);
-    currentСommand = 1;
-}
-
-void MyDlg::OnBnClickedRadio2()
-{
-    make_edit_disabled(0);
-    currentСommand = 2;
-}
-
-void MyDlg::OnBnClickedRadio3()
-{
-    make_edit_disabled(1);
-    currentСommand = 3;
-}
-
 // Сделать окна доступными (1) / недоступными (0)  для записи
-void MyDlg::make_edit_disabled(const bool& mode)
+void MyDlg::setWindowState(const bool& mode)
 {
-    CWnd* pWnd;
-    //pWnd = GetDlgItem(IDC_EDIT2);
-    pWnd->EnableWindow(mode);
-   // pWnd = GetDlgItem(IDC_EDIT3);
-    pWnd->EnableWindow(mode);
-   // pWnd = GetDlgItem(IDC_COMBO1);
-    pWnd->EnableWindow(mode);
-  
+    auto enable = [&](int nId)->void
+    {
+        CWnd* pWnd = GetDlgItem(nId);
+        if (pWnd)
+        {
+            pWnd->EnableWindow(mode);
+        }
+            
+    };
+    enable(IDC_EDIT1);
+    enable(IDC_EDIT2);
+    enable(IDC_EDIT3);
+    enable(IDC_EDIT4);
 }
-
-void MyDlg::OnCbnSelchangeCombo1()
-{}
-
 
 BOOL MyDlg::OnInitDialog()
 {
-    CDialog::OnInitDialog();
-
-    // Устанавливаем по умолчанию радио баттн 3
-        //CheckDlgButton(IDC_RADIO3, 1);    
-        
+    CheckDlgButton(IDC_RADIO2, 1);
+    CDialog::OnInitDialog();          
     return TRUE;  
 }
-void addJigObj()
-{
-    CustomJig* jig = new CustomJig();
 
-    jig->startJig();
-    delete jig;
-}
 // =============================Функция добавления примитива к базе =============================
 AcDbObjectId addToBase(AcDbEntity* entity)
 {
-    Acad::ErrorStatus error;
+    AcDbObjectId objectID;
     AcDbBlockTable* pBlockTable;
-    error = acdbHostApplicationServices()->workingDatabase()
-        ->getSymbolTable(pBlockTable, AcDb::kForRead);
-    if (error != Acad::eOk)           // Если не получилось открыть, то возврат нулевого ID
-        return AcDbObjectId::kNull;
-
+    acdbHostApplicationServices()->workingDatabase()->getSymbolTable(pBlockTable, AcDb::kForRead);
     AcDbBlockTableRecord* pBlockTableRecord;
-    error = pBlockTable->getAt(ACDB_MODEL_SPACE, pBlockTableRecord,
-        AcDb::kForWrite);
-    if (error != Acad::eOk)         // Если не получилось открыть для записи, то закрываем pBlockTable 
-    {                               // и возвращаем нулевой ID
-        pBlockTable->close();
-        return AcDbObjectId::kNull;
-    }
+    pBlockTable->getAt(ACDB_MODEL_SPACE, pBlockTableRecord, AcDb::kForWrite);
 
     pBlockTable->close();
 
-    AcDbObjectId objectID;
-    error = pBlockTableRecord->appendAcDbEntity(objectID, entity);
-    if (error != Acad::eOk)      // Если не получилось добавить примитив в базу, то закрываем  pBlockTableRecord
-    {                            // и возвращаем нулевой ID
-        pBlockTableRecord->close();
-        return AcDbObjectId::kNull;
-    }
-
+    pBlockTableRecord->appendAcDbEntity(objectID, entity);
     pBlockTableRecord->close();
     entity->close();
     return objectID;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Команда
 void openWindow()
 {
-    MyDlg btn;
+    MyDlg dlg;
     CAcModuleResourceOverride resOverride;
-    INT_PTR nRes = btn.DoModal();
-
+    INT_PTR nRes = dlg.DoModal();
 
     // Если нажали Ок и модальное окно закрылось
     if (nRes == 1)
     {
-        if (btn.currentСommand == 1)
-            addJigObj();
-
-        if (btn.currentСommand == 2)
-
-
-        if (btn.currentСommand == 3)
+        if (dlg.currentСommand == 1)
+        {
+            CustomJig* jig = new CustomJig();
+            jig->startJig();
+            delete jig;
+        }
+        if (dlg.currentСommand == 2)
         {
             AcGePoint3d center;
-            acedGetPoint(NULL, _T("\nENTER THE CENTER POINT: "),
-                asDblArray(center));
-            customObject* obj = new customObject(center);
-            //установить значения
-            AcDbObjectId objID = addToBase(obj);
+            acedGetPoint(NULL, _T("\nENTER THE CENTER POINT: "),asDblArray(center));
+            customObject* obj = new customObject(center); 
+            obj->setR(dlg.R);
+            obj->setr(dlg.r);
+            obj->setr1(dlg.r1);
+            obj->setH(dlg.h);
+            addToBase(obj);
+        }
+        if (dlg.currentСommand == 3)
+        {
+          
         }
     }
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void MyDlg::OnBnClickedRadio1()
+{
+    setWindowState(false);
+    currentСommand = 1;
+}
+
+
+void MyDlg::OnBnClickedRadio2()
+{
+    setWindowState(true);
+    currentСommand = 2;
+}
+
+
+void MyDlg::OnBnClickedRadio3()
+{
+    setWindowState(false);
+    currentСommand = 3;
+}
+
+
+void MyDlg::OnEnChangeEdit1()
+{
+    double val = getValue(IDC_EDIT1);
+    if (val < (r + 20))
+    {
+        R = r + 20;
+        setValue(R, IDC_EDIT1);
+    }
+    else
+    {
+        R=val;
+    }    
+}
+
+
+void MyDlg::OnEnChangeEdit2()
+{
+    double val = getValue(IDC_EDIT2);
+    if (val > (R - 20))
+    {
+        r = R-20;
+        setValue(r, IDC_EDIT2);
+    }
+    else
+    if (val < (r1 + 50))
+    {
+        r = r1 + 50;
+        setValue(r, IDC_EDIT2);
+    }
+    else
+    {
+        r=val;
+    }
+}
+
+
+void MyDlg::OnEnChangeEdit3()
+{
+    double val = getValue(IDC_EDIT3);
+    if (val > (r - 50))
+    {
+        r1 = r - 50;
+        setValue(r1, IDC_EDIT3);
+    }
+    else
+    if (val < (h/(2 * sin(PI / 8))))
+    {
+        r1 = (h / (2 * sin(PI / 8)));
+        setValue(r1, IDC_EDIT3);
+    }
+    else
+    {
+        r1 = val;
+    }
+}
+
+
+void MyDlg::OnEnChangeEdit4()
+{
+    double val = getValue(IDC_EDIT4);
+    if (val > (2 * r1 * sin(PI / 8)))
+    {
+        h = (2 * r1 * sin(PI / 8));
+        setValue(h, IDC_EDIT4);
+    }
+    else
+    if (val < 5)
+    {
+        h=5;
+        setValue(h, IDC_EDIT4);
+    }
+    else
+    {
+        h = val;
+    }
+}
+
+void MyDlg::setValue(double value, int index)
+{
+    CString sVal;
+    sVal.Format(_T("%.2f"), value);
+    CWnd* pWnd = GetDlgItem(index);
+    if (!pWnd)
+    {
+        return;
+    }
+    pWnd->SetWindowText(sVal);
+}
+
+double MyDlg::getValue(int index)
+{
+    CString sVal;
+    CWnd* pWnd = GetDlgItem(index);
+    if (!pWnd)
+    {
+        return index;
+    }
+    pWnd->GetWindowText(sVal);
+    return _wtof(sVal);
+}

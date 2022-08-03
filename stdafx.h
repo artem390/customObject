@@ -53,6 +53,7 @@
 #include <afxwin.h>
 #include <afxext.h>
 #include "arxHeaders.h"
+#include <afxcontrolbars.h>
 
 #pragma pack (pop)
 

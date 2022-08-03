@@ -51,7 +51,7 @@ Adesk::Boolean CustomJig::update()
     {
         if (m_Pt.isEqualTo(m_center))
         {
-            m_obj->setDirection(AcGeVector3d{ 1,0,0 });
+            m_obj->setDirection(AcGeVector3d::kXAxis);
         }
         else
         {
@@ -103,7 +103,7 @@ Acad::ErrorStatus CustomJig::setDimValue(const AcDbDimData* dimData, const doubl
 {
     if (count == 1)
     {
-        AcGeVector3d direction{ 1,0,0 };
+        AcGeVector3d direction{ AcGeVector3d::kXAxis };
         double cs = cos(dimValue);
         double sn = sin(dimValue);
         double rx = direction.x * cs - direction.y * sn;
