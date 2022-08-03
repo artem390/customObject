@@ -1,11 +1,13 @@
 ﻿#pragma once
 #include "Resource.h"
-
+enum class commands {
+	jigObj, objWithParams, block
+};
 
 class MyDlg : public CDialog
 {
 	DECLARE_DYNAMIC(MyDlg)
-
+	
 public:
 	MyDlg(CWnd* pParent = nullptr);   
 	virtual ~MyDlg();
@@ -19,24 +21,23 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX) override;    // поддержка DDX/DDV
 	DECLARE_MESSAGE_MAP()
-	void setWindowState(const bool& mode);
+	void setWindowState(const bool mode);
 	void setValue(double value,int index);
-	double getValue(int index);
+	bool getValue(int index, double& value);
 public:
-
-	int currentСommand;
+	commands currentСommand;
 	double R = 100;
 	double r = 80;
 	double r1 = 20;
 	double h = 10;
-
+	bool checkEdit1();
+	bool checkEdit2();
+	bool checkEdit3();
+	bool checkEdit4();
 	afx_msg void OnBnClickedRadio1();
 	afx_msg void OnBnClickedRadio2();
 	afx_msg void OnBnClickedRadio3();
-	afx_msg void OnEnChangeEdit1();
-	afx_msg void OnEnChangeEdit2();
-	afx_msg void OnEnChangeEdit3();
-	afx_msg void OnEnChangeEdit4();
+	afx_msg void OnBnClickedOk();
 };
 
 // Команда для запуска приложения
