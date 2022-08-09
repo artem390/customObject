@@ -5,10 +5,10 @@
 #include "jig.h"
 #include "extension.h"
 using namespace ATL;
-unique_ptr<MyDlg> dlg;
+
 #include "dbxHeaders.h"
 IMPLEMENT_DYNAMIC(MyDlg, CDialog)
-
+unique_ptr<MyDlg> MyDlg::dlg = NULL;
 MyDlg::MyDlg(CWnd* pParent)
 	: CDialog(IDD_DIALOG1, pParent), currentСommand(commands::objWithParams)
 {
@@ -22,7 +22,6 @@ void MyDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialog::DoDataExchange(pDX); 
 }
-
 
 BEGIN_MESSAGE_MAP(MyDlg, CDialog)
     ON_BN_CLICKED(IDC_RADIO1, &MyDlg::OnBnClickedRadio1)
@@ -38,7 +37,6 @@ HINSTANCE _hdllInstance = NULL;
 extern "C" int APIENTRY
 DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
 
-    // Remove this if you use lpReserved
     UNREFERENCED_PARAMETER(lpReserved);
 
     if (dwReason == DLL_PROCESS_ATTACH) {
@@ -48,11 +46,9 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     else if (dwReason == DLL_PROCESS_DETACH) {
         theArxDLL.DetachInstance();
     }
-    return 1;   // ok
+    return 1;   
 }
 
-
-// Сделать окна доступными (1) / недоступными (0)  для записи
 void MyDlg::setWindowState(const bool mode)
 {
     auto enable = [&](int nId)->void
@@ -77,50 +73,76 @@ BOOL MyDlg::OnInitDialog()
     setValue(r, IDC_EDIT2);
     setValue(r1, IDC_EDIT3);
     setValue(h, IDC_EDIT4);
-    CDialog::OnInitDialog();          
+    CDialog::OnInitDialog();   
     return TRUE;  
 }
 
-// =============================Функция добавления примитива к базе =============================
 AcDbObjectId addToBase(AcDbEntity* entity)
 {
+    Acad::ErrorStatus es;
     AcDbObjectId objectID;
     AcDbBlockTable* pBlockTable;
-    acdbHostApplicationServices()->workingDatabase()->getSymbolTable(pBlockTable, AcDb::kForRead);
+    es = acdbHostApplicationServices()->workingDatabase()->getSymbolTable(pBlockTable, AcDb::kForRead);
+    if (es != Acad::eOk)
+    {
+        return NULL;
+    }
     AcDbBlockTableRecord* pBlockTableRecord;
-    pBlockTable->getAt(ACDB_MODEL_SPACE, pBlockTableRecord, AcDb::kForWrite);
-
+    es = pBlockTable->getAt(ACDB_MODEL_SPACE, pBlockTableRecord, AcDb::kForWrite);
+    if (es != Acad::eOk)
+    {
+        return NULL;
+    }
     pBlockTable->close();
 
-    pBlockTableRecord->appendAcDbEntity(objectID, entity);
+    es = pBlockTableRecord->appendAcDbEntity(objectID, entity);
+    if (es != Acad::eOk)
+    {
+        return NULL;
+    }
     pBlockTableRecord->close();
     entity->close();
     return objectID;
 }
 
-AcDbObjectId createBlock(const CString& blockName)
+AcDbObjectId MyDlg::createBlock(const CString& blockName)
 {
     Acad::ErrorStatus es;
 
-    AcDbBlockTableRecord* pBlockRecord = new AcDbBlockTableRecord;
-
+    AcDbBlockTableRecordPointer pBlockRecord;
+    pBlockRecord.create();
 
     pBlockRecord->setName(blockName);
 
     AcDbObjectPointer<customObject> obj1;
     obj1.create();
     obj1->setCenter(AcGePoint3d(0, obj1->getR()- obj1->getr(),0));
+    obj1->setR(R);
+    obj1->setr(r);
+    obj1->setr1(r1);
+    obj1->setH(h);
     AcDbObjectPointer<customObject> obj2;
     obj2.create();
     obj2->setCenter(AcGePoint3d(0, -obj2->getR() + obj2->getr(), 0));
     obj2->setDirection(-AcGeVector3d::kXAxis);
+    obj2->setR(R);
+    obj2->setr(r);
+    obj2->setr1(r1);
+    obj2->setH(h);
 
     AcDbObjectId objId1;
     AcDbObjectId objId2;
     es = pBlockRecord->appendAcDbEntity(objId1, obj1);
+    if (es != Acad::eOk)
+    {
+        return NULL;
+    }
     es = pBlockRecord->appendAcDbEntity(objId2, obj2);
-
-    AcDbBlockTable* pBlockTable = new AcDbBlockTable;
+    if (es != Acad::eOk)
+    {
+        return NULL;
+    }
+    AcDbBlockTable* pBlockTable;
     es = acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, AcDb::kForWrite);
     if (es != Acad::eOk)
     {
@@ -135,69 +157,60 @@ AcDbObjectId createBlock(const CString& blockName)
     }
 
     pBlockTable->close();
-    pBlockRecord->close();
-
     return blockId;
 }
 
-void addBlock()
+void MyDlg::addBlock()
 {
-    Acad::ErrorStatus es;
-    AcGePoint3d center;
-    acedGetPoint(NULL, _T("\nENTER THE ENTRY POINT OF NEW BLOCK: "),asDblArray(center));
-
-    AcDbObjectPointerBase< AcDbBlockReference> pBlkRef;
-    pBlkRef.create();
-    pBlkRef->setPosition(center);
-
-    AcDbBlockTable* pBlockTable;
-    acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, AcDb::kForRead);
-
-    AcDbBlockTableRecord* mspacepBlockTableRecord;
-    es = pBlockTable->getAt(ACDB_MODEL_SPACE, mspacepBlockTableRecord, AcDb::kForWrite);
-    es = pBlockTable->close();
-
     static int blockNumb = 1;
-    
     AcDbObjectId blockId;
-    AcDbBlockTableRecord* pBlockTableRecord;
-
     CString sVal;
     sVal.Format(_T("%d"), blockNumb);
     sVal += " Block";
     blockId = createBlock(sVal);
     
-    blockNumb++;
-
     if (!blockId.isNull())
     {
-        pBlkRef->setBlockTableRecord(blockId);
-        es = mspacepBlockTableRecord->appendAcDbEntity(blockId, pBlkRef);
-    }
-
-    mspacepBlockTableRecord->close();
+        AcGePoint3d center;
+        if (acedGetPoint(NULL, _T("\nENTER THE ENTRY POINT OF NEW BLOCK: "), asDblArray(center)))
+        {
+            blockNumb++;
+            AcDbObjectPointerBase< AcDbBlockReference> pBlkRef;
+            pBlkRef.create();
+            pBlkRef->setBlockTableRecord(blockId);
+            AcDbBlockTable* pBlockTable;
+            acdbHostApplicationServices()->workingDatabase()->getBlockTable(pBlockTable, AcDb::kForRead);
+            AcDbBlockTableRecord* mspacepBlockTableRecord;
+            Acad::ErrorStatus es = pBlockTable->getAt(ACDB_MODEL_SPACE, mspacepBlockTableRecord, AcDb::kForWrite);
+            if (es == Acad::eOk)
+            {
+                pBlockTable->close();
+                pBlkRef->setPosition(center);
+                mspacepBlockTableRecord->appendAcDbEntity(blockId, pBlkRef);
+                mspacepBlockTableRecord->close();
+            }       
+        }   
+    }    
 }
 
 void openWindow()
-{
-    if (!dlg.get() || dlg->GetSafeHwnd() == NULL)
+{ 
+    MyDlg *d = MyDlg::getInstance();
+    if (d->GetSafeHwnd() == NULL)
     {
         CAcModuleResourceOverride resOverride;
-        dlg.reset(new MyDlg);
-
-        if (dlg.get())
+        if (d)
         {
-            BOOL bRes = dlg->Create(IDD_DIALOG1);
+            BOOL bRes = d->Create(IDD_DIALOG1, d->GetParent());
             if (bRes)
             {
-                dlg->ShowWindow(SW_SHOW);
+                d->ShowWindow(SW_SHOW);
             }
-
         }
     }
     else
     {
-        dlg->ShowWindow(SW_SHOW);
+        d->ShowWindow(SW_SHOW);
     }
 };
 
@@ -217,20 +230,19 @@ void MyDlg::OnBnClickedRadio2()
 
 void MyDlg::OnBnClickedRadio3()
 {
-    setWindowState(false);
+    setWindowState(true);
     currentСommand = commands::block;
 }
 
 void MyDlg::setValue(double value, int index)
 {
     CWnd* pWnd = GetDlgItem(index);
-    if (!pWnd)
+    if (pWnd)
     {
-        return;
-    }
-    CString sVal;
-    sVal.Format(_T("%.2f"), value);
-    pWnd->SetWindowText(sVal);
+        CString sVal;
+        sVal.Format(_T("%.2f"), value);
+        pWnd->SetWindowText(sVal);
+    }  
 }
 
 bool MyDlg::getValue(int index, double &value)
@@ -246,7 +258,6 @@ bool MyDlg::getValue(int index, double &value)
     return true;
 }
 
-
 void MyDlg::OnBnClickedOk()
 {
     if (currentСommand == commands::jigObj)
@@ -258,120 +269,84 @@ void MyDlg::OnBnClickedOk()
     else
     if (currentСommand == commands::objWithParams)
     {
-        if (checkEdit1())
+        if (checkObj())
         {
-            if (checkEdit2())
-            {
-                if (checkEdit3())
-                {
-                    if (checkEdit4())
-                    {
-                        AcGePoint3d center;
-                        acedGetPoint(NULL, _T("\nENTER THE CENTER POINT: "), asDblArray(center));
-                        customObject* obj = new customObject(center);
-                        obj->setR(R);
-                        obj->setr(r);
-                        obj->setr1(r1);
-                        obj->setH(h);
-                        addToBase(obj);
-                    }
-                }
-            }
+            AcGePoint3d center;
+            acedGetPoint(NULL, _T("\nENTER THE CENTER POINT: "), asDblArray(center));
+            customObject* obj = new customObject(center);
+            obj->setR(R);
+            obj->setr(r);
+            obj->setr1(r1);
+            obj->setH(h);
+            addToBase(obj);
         }
     }
     else
     if (currentСommand == commands::block)
     {
-        addBlock();
+        if (checkObj())
+        {
+            addBlock();
+        }        
     }
 }
-bool MyDlg::checkEdit1()
+
+bool MyDlg::checkObj()
 {
-    double val;
-    getValue(IDC_EDIT1,val);
-    if (getValue(IDC_EDIT1, val))
-    {
-        if (val < (r + 20))
-        {
-            acutPrintf(L"Incorrect R");
-            return false;
-        }
-        else
-        {
-            R = val;
-            return true;
-        }
-    }
-    else
-    {
-        return false;
-    }   
-    return true;
-}
-bool MyDlg::checkEdit2()
-{
-    double val; 
-    if (getValue(IDC_EDIT2, val))
-    {
-        if ((val > (R - 20)) || (val < (r1 + 50)))
-        {
-            acutPrintf(L"Incorrect r");
-            return false;
-        }
-        else
-        {
-            r = val;
-            return true;
-        }
-    }
-    else
-    {
-        return false;
-    }   
-    return true;
-}
-bool MyDlg::checkEdit3()
-{
-    double val; 
-    if (getValue(IDC_EDIT3, val))
-    {
-        if ((val > (r - 50)) || (val < (h / (2 * sin(PI / 8)))))
-        {
-            acutPrintf(L"Incorrect r1");
-            return false;
-        }
-        else
-        {
-            r1 = val;
-            return true;
-        }
-    }
-    else
+    double enteredR, enteredr, enteredr1, enteredH;
+    if (!getValue(IDC_EDIT1, enteredR))
     {
         return false;
     }
+    if (!getValue(IDC_EDIT2, enteredr))
+    {
+        return false;
+    }
+    if (!getValue(IDC_EDIT3, enteredr1))
+    {
+        return false;
+    }
+    if (!getValue(IDC_EDIT4, enteredH))
+    {
+        return false;
+    }
+
+    if (enteredR < (enteredr + 20))
+    {
+        acutPrintf(L"R-r must be less than 20");
+        return false;
+    }
+
+    if (enteredr < (enteredr1 + 50))
+    {
+        acutPrintf(L"r-r1 must be less than 50");
+        return false;
+    }
+
+    if (enteredr1 < (enteredH / (2 * sin(PI / 8))))
+    {
+        acutPrintf(L"r1 must be bigger");
+        return false;
+    }
+
+    if (enteredH < 5)
+    {
+        acutPrintf(L"h must be more than 5");
+        return false;
+    }
+
+    R = enteredR;
+    r = enteredr;
+    r1 = enteredr1;
+    h = enteredH;
     return true;
 }
 
-bool MyDlg::checkEdit4()
+MyDlg* MyDlg::getInstance()
 {
-    double val; 
-    if (getValue(IDC_EDIT4, val))
+    if (!dlg)
     {
-        if ((val > (2 * r1 * sin(PI / 8))) || (val < 5))
-        {
-            acutPrintf(L"Incorrect h");
-            return false;
-        }
-        else
-        {
-            h = val;
-            return true;
-        }
+        dlg.reset(new MyDlg);
     }
-    else
-    {
-        return false;
-    }
-    return true;
+    return dlg.get();
 }

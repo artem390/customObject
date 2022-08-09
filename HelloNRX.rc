@@ -50,24 +50,25 @@ END
 // Dialog
 //
 
-IDD_DIALOG1 DIALOGEX 0, 0, 341, 105
+IDD_DIALOG1 DIALOGEX 0, 0, 405, 180
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Test"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT1,7,25,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT2,59,26,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT3,110,26,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT4,161,25,40,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "ОК",IDOK,223,84,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,284,84,50,14
-    CONTROL         "Произвольный объект",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,7,74,92,10
-    CONTROL         "Объект с параметрами",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,108,73,93,10
-    CONTROL         "Блок",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,216,73,32,10
-    LTEXT           "R",IDC_STATIC,9,14,8,8
-    LTEXT           "r",IDC_STATIC,62,15,8,8
-    LTEXT           "r1",IDC_STATIC,111,15,8,8
-    LTEXT           "h",IDC_STATIC,163,15,8,8
+    EDITTEXT        IDC_EDIT1,314,19,73,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,313,39,73,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT3,313,60,74,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT4,313,81,75,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "ОК",IDOK,296,159,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,348,159,50,14
+    CONTROL         "Произвольный объект",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,302,104,92,10
+    CONTROL         "Объект с параметрами",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,302,122,93,10
+    CONTROL         "Блок",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,302,141,32,10
+    LTEXT           "R",IDC_STATIC,304,23,8,8
+    LTEXT           "r",IDC_STATIC,305,39,8,8
+    LTEXT           "r1",IDC_STATIC,304,60,8,8
+    LTEXT           "h",IDC_STATIC,303,82,8,8
+    CONTROL         IDB_BITMAP1,IDC_STATIC,"Static",SS_BITMAP,7,7,32,30
 END
 
 
@@ -82,9 +83,9 @@ BEGIN
     IDD_DIALOG1, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 334
+        RIGHTMARGIN, 398
         TOPMARGIN, 7
-        BOTTOMMARGIN, 98
+        BOTTOMMARGIN, 173
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -97,8 +98,30 @@ END
 
 IDD_DIALOG1 AFX_DIALOG_LAYOUT
 BEGIN
-    0
+    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 100
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "bitmap1.bmp"
 
 #endif    // Русский (Россия) resources
 /////////////////////////////////////////////////////////////////////////////
