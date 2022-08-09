@@ -49,7 +49,7 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     return 1;   
 }
 
-void MyDlg::setWindowState(const bool mode)
+void MyDlg::setWindowState(const bool mode) const
 {
     auto enable = [&](int nId)->void
     {
@@ -105,7 +105,7 @@ AcDbObjectId addToBase(AcDbEntity* entity)
     return objectID;
 }
 
-AcDbObjectId MyDlg::createBlock(const CString& blockName)
+AcDbObjectId MyDlg::createBlock(const CString& blockName) const
 {
     Acad::ErrorStatus es;
 
@@ -160,7 +160,7 @@ AcDbObjectId MyDlg::createBlock(const CString& blockName)
     return blockId;
 }
 
-void MyDlg::addBlock()
+void MyDlg::addBlock() const
 {
     static int blockNumb = 1;
     AcDbObjectId blockId;
@@ -234,7 +234,7 @@ void MyDlg::OnBnClickedRadio3()
     currentСommand = commands::block;
 }
 
-void MyDlg::setValue(double value, int index)
+void MyDlg::setValue(double value, int index) const
 {
     CWnd* pWnd = GetDlgItem(index);
     if (pWnd)
@@ -245,7 +245,7 @@ void MyDlg::setValue(double value, int index)
     }  
 }
 
-bool MyDlg::getValue(int index, double &value)
+bool MyDlg::getValue(int index, double &value) const
 {
     CWnd* pWnd = GetDlgItem(index);
     if (!pWnd)
