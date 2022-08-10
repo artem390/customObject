@@ -29,8 +29,8 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX) override;    // поддержка DDX/DDV
 	DECLARE_MESSAGE_MAP()
-	void setWindowState(const bool mode) const;
-	void setValue(double value,int index) const;
+	void setWindowState(const bool mode);
+	void setValue(double value,int index);
 	bool getValue(int index, double& value) const;
 private:
 	static unique_ptr<MyDlg> dlg;

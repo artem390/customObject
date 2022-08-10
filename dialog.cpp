@@ -49,7 +49,7 @@ DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     return 1;   
 }
 
-void MyDlg::setWindowState(const bool mode) const
+void MyDlg::setWindowState(const bool mode)
 {
     auto enable = [&](int nId)->void
     {
@@ -68,12 +68,12 @@ void MyDlg::setWindowState(const bool mode) const
 
 BOOL MyDlg::OnInitDialog()
 {
+    CDialog::OnInitDialog();
     CheckDlgButton(IDC_RADIO2, 1);
     setValue(R, IDC_EDIT1);
     setValue(r, IDC_EDIT2);
     setValue(r1, IDC_EDIT3);
-    setValue(h, IDC_EDIT4);
-    CDialog::OnInitDialog();   
+    setValue(h, IDC_EDIT4);   
     return TRUE;  
 }
 
@@ -101,7 +101,6 @@ AcDbObjectId addToBase(AcDbEntity* entity)
         return NULL;
     }
     pBlockTableRecord->close();
-    entity->close();
     return objectID;
 }
 
@@ -201,7 +200,7 @@ void openWindow()
         CAcModuleResourceOverride resOverride;
         if (d)
         {
-            BOOL bRes = d->Create(IDD_DIALOG1, d->GetParent());
+            BOOL bRes = d->Create(IDD_DIALOG1, acedGetAcadFrame());
             if (bRes)
             {
                 d->ShowWindow(SW_SHOW);
@@ -234,7 +233,7 @@ void MyDlg::OnBnClickedRadio3()
     currentСommand = commands::block;
 }
 
-void MyDlg::setValue(double value, int index) const
+void MyDlg::setValue(double value, int index) 
 {
     CWnd* pWnd = GetDlgItem(index);
     if (pWnd)
@@ -272,13 +271,22 @@ void MyDlg::OnBnClickedOk()
         if (checkObj())
         {
             AcGePoint3d center;
-            acedGetPoint(NULL, _T("\nENTER THE CENTER POINT: "), asDblArray(center));
-            customObject* obj = new customObject(center);
-            obj->setR(R);
-            obj->setr(r);
-            obj->setr1(r1);
-            obj->setH(h);
-            addToBase(obj);
+            if (acedGetPoint(NULL, _T("\nENTER THE CENTER POINT: "), asDblArray(center)))
+            {
+                customObject* obj = new customObject(center);
+                obj->setR(R);
+                obj->setr(r);
+                obj->setr1(r1);
+                obj->setH(h);
+                if (addToBase(obj)==NULL)
+                {
+                    delete obj;
+                }
+                else
+                {
+                    obj->close();
+                }
+            }
         }
     }
     else
@@ -313,13 +321,13 @@ bool MyDlg::checkObj()
 
     if (enteredR < (enteredr + 20))
     {
-        acutPrintf(L"R-r must be less than 20");
+        acutPrintf(L"R-r must be greater than 20");
         return false;
     }
 
     if (enteredr < (enteredr1 + 50))
     {
-        acutPrintf(L"r-r1 must be less than 50");
+        acutPrintf(L"r-r1 must be greater than 50");
         return false;
     }
 
@@ -331,7 +339,7 @@ bool MyDlg::checkObj()
 
     if (enteredH < 5)
     {
-        acutPrintf(L"h must be more than 5");
+        acutPrintf(L"h must be greater than 5");
         return false;
     }
 
